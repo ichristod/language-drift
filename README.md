@@ -7,6 +7,8 @@
 
 This project aims to compare different distributional text representations to determine whether semantic drift occurs and how it impacts the different text representations.
 
+[]: # 'TODO' Give credits to https://github.com/seinan9/LSCDiscovery and other projects that it was based on.
+
 ## Table of Contents
 
 - [Install](#install)
@@ -19,7 +21,17 @@ This project aims to compare different distributional text representations to de
 ## Install
 
 ```
+# create new env
+conda create --name language-drift python=3.9.1
 
+# install pip
+conda install pip
+
+# install requirements
+pip install -r requirements.txt
+
+# folder permissions
+sudo chmod a+w language-drift
 ```
 
 ## API
