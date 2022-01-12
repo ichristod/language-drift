@@ -30,8 +30,13 @@ conda install pip
 # install requirements
 pip install -r requirements.txt
 
+# download spacy to use for detection in whether a word is a NOUN, VERB or ADJ.
+python -m spacy download en_core_web_sm
+
 # folder permissions
 sudo chmod a+w language-drift
+
+#TODO add - glove mkdir+wget 
 ```
 
 ## API
@@ -43,7 +48,14 @@ sudo chmod a+w language-drift
 ## Tests
 
 ```
+# create the appropriate folder structure for "1st-trial"
+bash ./scripts/prepare_data.sh 1st-trial ./data/en_semeval/corpus1/lemma.txt.gz ./data/en_semeval/corpus2/lemma.txt.gz ./data/en_semeval/corpus1/token.txt.gz ./data/en_semeval/corpus2/token.txt.gz ./data/en_semeval/targets/targets.tsv ./data/en_semeval/truth/binary.tsv ./data/en_semeval/truth/graded.tsv
 
+# run SGNS without pretrained embeddings
+bash ./scripts/discover_sgns.sh 1st-trial 10 50 5 0.001 3 3 5 1.0 en None None
+
+# run SGNS with Glove pretrained embeddings
+bash ./scripts/discover_sgns.sh 1st-trial 10 50 5 0.001 3 3 5 1.0 en Glove ./pretrained_embed/glove.6B
 ```
 
 ## Support
