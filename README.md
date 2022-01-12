@@ -36,6 +36,9 @@ python -m spacy download en_core_web_sm
 # folder permissions
 sudo chmod a+w language-drift
 
+# download semeval test data
+sudo ./scripts/import_semeval_en.sh
+
 #TODO add - glove mkdir+wget 
 ```
 
