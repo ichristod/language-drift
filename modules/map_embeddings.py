@@ -127,6 +127,7 @@ def main():
         parser.set_defaults(init_identical=True, normalize=['unit', 'center', 'unit'], whiten=True, src_reweight=0.5, trg_reweight=0.5, src_dewhiten='src', trg_dewhiten='trg', self_learning=True, vocabulary_cutoff=20000, csls_neighborhood=10)
     if args.unsupervised or args.acl2018:
         parser.set_defaults(init_unsupervised=True, unsupervised_vocab=4000, normalize=['unit', 'center', 'unit'], whiten=True, src_reweight=0.5, trg_reweight=0.5, src_dewhiten='src', trg_dewhiten='trg', self_learning=True, vocabulary_cutoff=20000, csls_neighborhood=10)
+    '''
     if args.aaai2018:
         parser.set_defaults(init_dictionary=args.aaai2018, normalize=['unit', 'center'], whiten=True, trg_reweight=1, src_dewhiten='src', trg_dewhiten='trg', batch_size=1000)
     if args.acl2017:
@@ -135,6 +136,7 @@ def main():
         parser.set_defaults(init_dictionary=args.acl2017_seed, orthogonal=True, normalize=['unit', 'center'], self_learning=True, direction='forward', stochastic_initial=1.0, stochastic_interval=1, batch_size=1000)
     if args.emnlp2016:
         parser.set_defaults(init_dictionary=args.emnlp2016, orthogonal=True, normalize=['unit', 'center'], batch_size=1000)
+    '''
     args = parser.parse_args()
 
     # Check command line arguments
@@ -168,12 +170,12 @@ def main():
         xp = np
     xp.random.seed(args.seed)
 
-    # Build word to index map
+    # Returns a dictionary
+    # word(key) : index i(value)
+    # Example --> src_word2ind:  {'the': 0, 'of': 1, 'be': 2,}
     src_word2ind = {word: i for i, word in enumerate(src_words)}
     trg_word2ind = {word: i for i, word in enumerate(trg_words)}
 
-    #print(args.normalize)
-    #print(args.self_learning)
     # STEP 0: Normalization
     embeddings.normalize(x, args.normalize)
     embeddings.normalize(z, args.normalize)
@@ -215,7 +217,9 @@ def main():
         for word in numerals:
             src_indices.append(src_word2ind[word])
             trg_indices.append(trg_word2ind[word])
+
     elif args.init_identical:
+       # a set class object with common vocabulary (source-target)
         identical = set(src_words).intersection(set(trg_words))
         for word in identical:
             src_indices.append(src_word2ind[word])
@@ -258,7 +262,9 @@ def main():
     xw = xp.empty_like(x)
     zw = xp.empty_like(z)
     src_size = x.shape[0] if args.vocabulary_cutoff <= 0 else min(x.shape[0], args.vocabulary_cutoff)
+
     trg_size = z.shape[0] if args.vocabulary_cutoff <= 0 else min(z.shape[0], args.vocabulary_cutoff)
+
     simfwd = xp.empty((args.batch_size, trg_size), dtype=dtype)
     simbwd = xp.empty((args.batch_size, src_size), dtype=dtype)
     if args.validation is not None:
@@ -423,8 +429,10 @@ def main():
     # Write mapped embeddings
     srcfile = open(args.src_output, mode='w', encoding=args.encoding, errors='surrogateescape')
     trgfile = open(args.trg_output, mode='w', encoding=args.encoding, errors='surrogateescape')
+
     embeddings.write(src_words, xw, srcfile)
     embeddings.write(trg_words, zw, trgfile)
+
     srcfile.close()
     trgfile.close()
 

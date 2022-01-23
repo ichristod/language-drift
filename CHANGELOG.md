@@ -15,3 +15,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Modified
 - sgns without pretrained embeddings
 
+## [2.0.0] - 2022-01-24
+### Added
+- 'word2vec algorithm' as a parameter
+- 'incremental learning' as a parameter
+### Modified
+- refactored sgns.py (argument parser, new functions)
+
+
+

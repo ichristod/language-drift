@@ -17,7 +17,8 @@ from cupy_utils import *
 
 import numpy as np
 
-
+# input: a word2vec format file
+# output: a list of words and a numpy array of the actual embeddings
 def read(file, threshold=0, vocabulary=None, dtype='float'):
     header = file.readline().split(' ')
     count = int(header[0]) if threshold <= 0 else min(threshold, int(header[0]))
@@ -45,6 +46,7 @@ def write(words, matrix, file):
 def length_normalize(matrix):
     xp = get_array_module(matrix)
     norms = xp.sqrt(xp.sum(matrix**2, axis=1))
+    # QA: explain the below expression
     norms[norms == 0] = 1
     matrix /= norms[:, xp.newaxis]
 
