@@ -51,14 +51,14 @@ sudo ./scripts/import_semeval_en.sh
 ## Tests
 
 ```
-# create the appropriate folder structure for "1st-trial"
-bash ./scripts/prepare_data.sh 1st-trial ./data/en_semeval/corpus1/lemma.txt.gz ./data/en_semeval/corpus2/lemma.txt.gz ./data/en_semeval/corpus1/token.txt.gz ./data/en_semeval/corpus2/token.txt.gz ./data/en_semeval/targets/targets.tsv ./data/en_semeval/truth/binary.tsv ./data/en_semeval/truth/graded.tsv
+# create the appropriate folder structure for "1.0.0" version
+bash ./scripts/prepare_data.sh 1.0.0 ./data/en_semeval/corpus1/lemma.txt.gz ./data/en_semeval/corpus2/lemma.txt.gz ./data/en_semeval/corpus1/token.txt.gz ./data/en_semeval/corpus2/token.txt.gz ./data/en_semeval/targets/targets.tsv ./data/en_semeval/truth/binary.tsv ./data/en_semeval/truth/graded.tsv
 
-# run SGNS without pretrained embeddings
-bash ./scripts/discover_sgns.sh 1st-trial 10 50 5 0.001 3 3 5 1.0 en None None
+# run sgns/cbow without pretrained embeddings (incremental)
+bash ./scripts/classify_sgns.sh 1.0.0 10 50 5 0.001 3 3 5 1.0 incr sgns None None
 
-# run SGNS with Glove pretrained embeddings
-bash ./scripts/discover_sgns.sh 1st-trial 10 50 5 0.001 3 3 5 1.0 en Glove ./pretrained_embed/glove.6B
+# run sgns/cbow with Glove pretrained embeddings (non incremental)
+bash ./scripts/classify_sgns.sh 1.0.0 10 50 5 0.001 3 3 5 1.0 nonincr sgns glove ./pretrained_embed/glove.6B
 ```
 
 ## Support
