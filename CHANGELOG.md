@@ -17,10 +17,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.0.0] - 2022-01-24
 ### Added
-- 'word2vec algorithm' as a parameter
-- 'incremental learning' as a parameter
+- 'word2vec algorithm' as a parameter in scripts
+- 'incremental learning' as a parameter in scripts
 ### Modified
 - refactored sgns.py (argument parser, new functions)
+
+## [2.1.0] - 2022-01-26
+### Added
+- jaccard_neighbors.py
+### Modified
+- classify_sgns.sh (added jaccard index report, classification report)
 
 
 

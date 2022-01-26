@@ -62,19 +62,21 @@ mkdir -p ${resdir}
 
 
 # Generate word embeddins with SGNS
-python static/sgns.py data/${data_set_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${itera} ${incremental_learning} ${w2vec_algorithm} --embed_pretrained ${embed_pretrained} --path_pretrained ${path_pretrained}
-python static/sgns.py data/${data_set_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${itera} ${incremental_learning} ${w2vec_algorithm} --embed_pretrained ${embed_pretrained} --path_pretrained ${path_pretrained}
+python static/sgns.py --len data/${data_set_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${itera} ${incremental_learning} ${w2vec_algorithm} --embed_pretrained ${embed_pretrained} --path_pretrained ${path_pretrained}
+python static/sgns.py --len data/${data_set_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${itera} ${incremental_learning} ${w2vec_algorithm} --embed_pretrained ${embed_pretrained} --path_pretrained ${path_pretrained}
 
 
 if [ "$incremental_learning" == "nonincr" ]
   then
     echo "Non incremental learning"
     # Length-normalize, meanc-center and align with OP
-    python modules/map_embeddings.py --normalize unit center --init_identical --orthogonal ${outdir}/mat1 ${outdir}/mat2 ${outdir}/mat1ca ${outdir}/mat2ca
+    python modules/map_embeddings.py --init_identical --orthogonal ${outdir}/mat1 ${outdir}/mat2 ${outdir}/mat1ca ${outdir}/mat2ca
     # Measure CD for every word in the intersection
     python measures/cd.py ${outdir}/mat1ca ${outdir}/mat2ca ${resdir}/distances_intersection.tsv
     # Measure CD for every target word
     python measures/cd.py ${outdir}/mat1ca ${outdir}/mat2ca data/${data_set_id}/targets/targets.tsv ${resdir}/distances_targets.tsv
+    #Calculate jaccard index for target words' topN neighbors
+    python measures/jaccard_neighbors.py ${outdir}/mat1ca ${outdir}/mat2ca data/${data_set_id}/targets/targets.tsv ${window_size} ${resdir}/jaccard_index_report.csv
 
 elif [ "$incremental_learning" == "incr" ]
   then
@@ -83,8 +85,12 @@ elif [ "$incremental_learning" == "incr" ]
     python measures/cd.py ${outdir}/mat1 ${outdir}/mat2 ${resdir}/distances_intersection.tsv
     # Measure CD for every word in the intersection of the vocabularies
     python measures/cd.py ${outdir}/mat1 ${outdir}/mat2 data/${data_set_id}/targets/targets.tsv ${resdir}/distances_targets.tsv
+    #Calculate jaccard index for target words' topN neighbors
+    python measures/jaccard_neighbors.py ${outdir}/mat1 ${outdir}/mat2 data/${data_set_id}/targets/targets.tsv ${window_size} ${resdir}/jaccard_index_report.csv
 fi
-
 
 # Compute binary scores for targets
 python measures/binary.py ${resdir}/distances_intersection.tsv ${resdir}/distances_targets.tsv ${resdir}/scores_targets.tsv " ${t} "
+
+#Calculate classification performance of experiment
+python evaluation/class_metrics.py data/${data_set_id}/truth/binary.tsv ${resdir}/scores_targets.tsv ${resdir}/perfomance_report.csv
