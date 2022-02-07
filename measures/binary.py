@@ -1,6 +1,7 @@
 import csv
 import logging
 import time 
+from scipy.stats import sem
 
 from docopt import docopt
 import numpy as np
@@ -53,7 +54,8 @@ def main():
 
     mean = np.mean(list_distances, axis=0)
     std = np.std(list_distances, axis=0)
-    threshold = mean + t * std
+    stde = sem(list_distances, axis=0)
+    threshold = mean + t * stde
 
     # Usage 1: discover changing words 
     if path_targets == None:
