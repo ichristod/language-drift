@@ -9,6 +9,8 @@ from docopt import docopt
 import gensim
 from gensim.models.word2vec import PathLineSentences
 from gensim.models import KeyedVectors
+# from gensim.scripts.glove2word2vec import glove2word2vec
+# from gensim.test.utils import get_tmpfile
 
 # Acceptable pretrained embeddings dimensions
 pretrained_dim = [50, 100, 200, 300]
@@ -34,8 +36,8 @@ def get_file_prev_version(path_corpus):
     return previous_version, file_full_path
 
 
-def initialize_word2vec_model(path_corpus,algorithm,hs,neg_samples,sampl_threshold,dim,
-                              window_size,min_count,iterations,workers):
+def initialize_word2vec_model(path_corpus, algorithm, hs, neg_samples, sampl_threshold, dim,
+                              window_size, min_count, iterations, workers):
     # Initialize model
     model = gensim.models.Word2Vec(sg=algorithm,  # skipgram
                                    hs=hs,  # negative sampling
@@ -56,12 +58,12 @@ def initialize_word2vec_model(path_corpus,algorithm,hs,neg_samples,sampl_thresho
     return model, total_examples, sentences
 
 
-def train_word2vec_model(pretrained_matrix, embeddings_to_load, dim, word2vec_model, total_examples, sentences):
+def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incremental, dim, word2vec_model, total_examples, sentences):
 
     # check if pretrained embeddings exist
     if not pretrained_matrix:
         word2vec_model.train(sentences, total_examples=total_examples, epochs=word2vec_model.epochs)
-    elif pretrained_matrix in list_of_pretrained:
+    elif (pretrained_matrix in list_of_pretrained) or apply_incremental:
         # check if exists pretrained embedding with given dimensions
         if dim in pretrained_dim:
             # initialize embeddings
@@ -69,6 +71,8 @@ def train_word2vec_model(pretrained_matrix, embeddings_to_load, dim, word2vec_mo
             word2vec_model.build_vocab([list(model_wv.vocab.keys())], update=True)
             word2vec_model.intersect_word2vec_format(embeddings_to_load, binary=False, lockf=1.0)
             word2vec_model.train(sentences, total_examples=total_examples, epochs=word2vec_model.epochs)
+
+
 
     return word2vec_model
 
@@ -99,9 +103,9 @@ def main():
     parser.add_argument('s', help='threshold for subsampling')
     parser.add_argument('min_count', type=int, help='Number of occurrences for a word to be included in the vocabulary')
     parser.add_argument('itera', type=int, help='number of iterations')
-    parser.add_argument('incremental', help='indicates incremental learning')
+    parser.add_argument('mapping', help='indicates type of embeddings mapping')
     parser.add_argument('w2vec_algorithm', help='word2vec algorithm - sgns/cbow')
-    parser.add_argument('--embed_pretrained', default='glove', help='option of pretrained embeddings (None, Glove)')
+    parser.add_argument('--pretrained', default='glove', help='option of pretrained embeddings (None, Glove)')
     parser.add_argument('--path_pretrained', help='path to pretrained embeddings directory with txt files')
     parser.add_argument('--len', action='store_true', help='normalize final vectors to unit length')
 
@@ -114,7 +118,7 @@ def main():
     k = args.k
     min_count = args.min_count
     itera = args.itera
-    incremental = args.incremental
+    mapping = args.mapping
     w2vec_algorithm = args.w2vec_algorithm
 
     if args.s=='None':
@@ -122,8 +126,8 @@ def main():
     else:
         s = float(args.s)
 
-    if args.embed_pretrained is not None:
-        embed_pretrained = args.embed_pretrained
+    if args.pretrained is not None:
+        pretrained = args.pretrained
     if args.path_pretrained is not None:
         path_pretrained = args.path_pretrained
     if args.len is not None:
@@ -148,27 +152,25 @@ def main():
                                                                iterations=itera,workers=40)
 
     # check incremental training conditions
-    if incremental == 'incr':
+    if mapping == 'incremental':
         # get previous matrix info
         previous_version, file_full_path = get_file_prev_version(path_output)
 
         if previous_version > 0:
             # incremental training of next corpus
             # load previous model
-            embeddings_to_load = retrieve_embeddings_to_load(embed_pretrained,path_pretrained, dim,
-                                                             True,file_full_path)
-            model = train_word2vec_model(embed_pretrained, embeddings_to_load, dim, model, total_examples, sentences)
+            embeddings_to_load = retrieve_embeddings_to_load(
+                pretrained, path_pretrained, dim, True, file_full_path)
+            model = train_word2vec_model(pretrained, embeddings_to_load, True, dim, model, total_examples, sentences)
         else:
             # initial training of corpus1 without pretrained embeddings
-            embeddings_to_load = retrieve_embeddings_to_load(embed_pretrained,path_pretrained, dim,
-                                                             False,file_full_path)
-            model = train_word2vec_model(embed_pretrained, embeddings_to_load, dim, model, total_examples, sentences)
+            embeddings_to_load = retrieve_embeddings_to_load(
+                pretrained, path_pretrained, dim, False, file_full_path)
+            model = train_word2vec_model(pretrained, embeddings_to_load, False, dim, model, total_examples, sentences)
     else:
         # define embeddings
-        embeddings_to_load = retrieve_embeddings_to_load(
-            embed_pretrained, path_pretrained, dim, False, None)
-
-        model = train_word2vec_model(embed_pretrained, embeddings_to_load, dim, model, total_examples, sentences)
+        embeddings_to_load = retrieve_embeddings_to_load(pretrained, path_pretrained, dim, False, None)
+        model = train_word2vec_model(pretrained, embeddings_to_load, False,dim, model, total_examples, sentences)
 
 
     if is_len:
