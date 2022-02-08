@@ -60,11 +60,15 @@ mkdir -p data/${data_set_id}/corpus2
 # If used if a single corpus pair
 if [ $# -eq 3 ]
     then
-        cp ${corpus1_lemma} data/${data_set_id}/corpus1/lemma.txt.gz
-        cp ${corpus2_lemma} data/${data_set_id}/corpus2/lemma.txt.gz
+      cp ${corpus1_lemma} data/${data_set_id}/corpus1/lemma.txt.gz
+      cp ${corpus2_lemma} data/${data_set_id}/corpus2/lemma.txt.gz
 
-        cp ${corpus1_lemma} data/${data_set_id}/corpus1/token.txt.gz
-        cp ${corpus2_lemma} data/${data_set_id}/corpus2/token.txt.gz
+      if [[ "$STR" == *"en_semeval"* ]]
+          then
+            cp ${corpus1_lemma} data/${data_set_id}/corpus1/token.txt.gz
+            cp ${corpus2_lemma} data/${data_set_id}/corpus2/token.txt.gz
+      fi
+
 fi        
 
 # Store lemma copora and token corpora
