@@ -1,0 +1,14 @@
+# results
+*.tsv
+# saved models
+mat*
+# pickle files
+*.pkl
+# datasets
+*.txt.gz
+
+# others
+*.iml
+*.xml
+
+
