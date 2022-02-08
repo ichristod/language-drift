@@ -1,11 +1,9 @@
 import csv
 import logging
-import sys
 import time
 import pandas as pd
 
 from docopt import docopt
-import numpy as np 
 from sklearn import metrics
 
 def main():
@@ -16,20 +14,36 @@ def main():
     args = docopt("""Create classification report
 
     Usage:
-        class_metrics.py <path_truth> <path_file>  <path_output> 
+        class_metrics.py <path_truth> <path_file>  <path_output> <mapping> <w2vec_algorithm> \
+                         <pretrained> <window_size> <dim> <t> <data_set_id>
 
-        <path_truth>    = path to binary gold data (tab-separated)
-        <path_file>     = path to file containing words and binary values (tab-separated)
-        <path_output>   = csv file to save performance results
+        <path_truth>            = path to binary gold data (tab-separated)
+        <path_file>             = path to file containing words and binary values (tab-separated)
+        <path_output>           = csv file to save performance results
+        <mapping>               = indicates type of embeddings mapping
+        <w2vec_algorithm>       = word2vec algorithm - sgns/cbow
+        <pretrained>            = option of pretrained embeddings (none, glove)
+        <window_size>           = the linear distance of context words to consider in each direction
+        <dim>                   = dimensionality of embeddings
+        <t>                     = threshold = mean + t * standard error"
+        <data_set_id>           = data set identifier
 
     """)
 
     path_truth = args['<path_truth>']
     path_file = args['<path_file>']
     path_output = args['<path_output>']
+    mapping = args['<mapping>']
+    w2vec_algorithm = args['<w2vec_algorithm>']
+    pretrained = args['<pretrained>']
+    window_size = args['<window_size>']
+    dim = args['<dim>']
+    t = args['<t>']
+    data_set_id = args['<data_set_id>']
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info(__file__.upper())
+
     start_time = time.time()
 
     # Load gold data
@@ -46,9 +60,22 @@ def main():
         for row in reader:
             predictions.append(int(row[1]))
 
-    clsf_report = pd.DataFrame(metrics.classification_report(y_true=truth, y_pred=predictions,
-                                                             output_dict=True)).transpose()
-    clsf_report.to_csv(path_output, index=True)
+    # Compute metrics
+    precision = metrics.precision_score(truth, predictions, zero_division=0)
+    recall = metrics.recall_score(truth, predictions, zero_division=0)
+    accuracy = metrics.accuracy_score(truth, predictions)
+    f1 = metrics.f1_score(truth, predictions, zero_division=0)
+
+    precision = round(precision, 3)
+    recall = round(recall, 3)
+    f1 = round(f1, 3)
+
+    df = pd.DataFrame({'data_set_id':data_set_id,'w2vec_algorithm': w2vec_algorithm, 'pretrained': pretrained,
+                       'mapping': mapping, 'dim': dim, 'window_size': window_size,
+                       't': t, 'f1': f1, 'accuracy':accuracy, 'recall': recall,
+                       'precision': precision, 't': t},index=[0])
+    df.to_pickle(path_output)
+
 
     logging.info("--- %s seconds ---" % (time.time() - start_time))    
     print("")
