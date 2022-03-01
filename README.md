@@ -13,7 +13,7 @@ This project aims to compare different distributional text representations to de
 
 - [Install](#install)
 - [API](#api)
-- [Tests](#tests)
+- [Usage](#usage)
 - [Support](#support)
 - [Contributing](#contributing)
 - [License](#license)
@@ -92,6 +92,18 @@ language = 'en' | 'de' | 'lat' | 'swe'
 embed = 'glove' | 'dewiki' | 'lat_conll17' | ''
 path = './results/**/**/classification'
 ```
+
+![English](/visualizations/images/en_mappings.png?raw=true "mappings")
+![English](/visualizations/images/en_thresholds.png?raw=true "thresholds")
+
+![German](/visualizations/images/de_mappings.png?raw=true "mappings")
+![German](/visualizations/images/de_thresholds.png?raw=true "thresholds")
+
+![Latin](/visualizations/images/lat_mappings.png?raw=true "mappings")
+![Latin](/visualizations/images/lat_thresholds.png?raw=true "thresholds")
+
+![Swedish](/visualizations/images/swe_mappings.png?raw=true "mappings")
+![Swedish](/visualizations/images/swe_thresholds.png?raw=true "thresholds")
 
 ## Support
 
