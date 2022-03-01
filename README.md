@@ -36,36 +36,66 @@ python -m spacy download en_core_web_sm
 # folder permissions
 sudo chmod a+w language-drift
 
-# download semeval test data
-sudo ./scripts/import_semeval_en.sh
+###TODO add - glove mkdir+wget 
 
-#TODO add - glove mkdir+wget 
+# reproduce results
+bash ./reproduce_experiment.sh
+
+
 ```
 
 ## API
+The implementation handles the task of **binary classification** for the detection of semantic change on targeted words.
+
+These words are annotated and provided from the [SemEval-2020 Task 1: Unsupervised Lexical Semantic Change Detection](https://aclanthology.org/2020.semeval-1.1) (Schlechtweg et al., SemEval 2020).
+
+In order to identify whether a word lost, gained or kept it's initial sense we use the following threshold on the cosine distance of each word (W) in corpora C1 from the same word in corpora C2.
 
 ```
-
+Distance(Wc1,Wc2) > threshold = mean(list_of_distances_of_target_words) + standardError(list_of_distances_of_target_words)
 ```
 
-## Tests
+### - reproduce_experiment script
+The main parameters of the reproduce_experiment script are:
+- languages - **en**, **de**, **lat** and **swe**.
+- word2vec algorithm
+  - skip-gram with negative-sampling - **sgns**
+  - continuous bag of words - **cbow**
+- mappings
+  - **alignment** with orthogonal procrustes
+  - **incremental** fine-tuning approach
+- threshold multiplier - e.g. **1.0**, **1.5**, **2.0**
+- version of the execution - e.g. **1.0.0**
 
+There are also available some functionalities for the first execution:
+1. download_datasets for the supported languages   - **true**/**false**
+2. download_pretrained embeddings (except swedish) - **true**/**false**
+3. prepare_datasets folder structure - **true**/**false**
+
+####TODO: Create configuration file
+### - word2vec parameters
+Word2vec parameters are described in **classify_sgns.sh**. 
+An example of that script is presented below. 
 ```
-# create the appropriate folder structure for "1.0.0" version
-bash ./scripts/prepare_data.sh 1.0.0 ./data/en_semeval/corpus1/lemma.txt.gz ./data/en_semeval/corpus2/lemma.txt.gz ./data/en_semeval/corpus1/token.txt.gz ./data/en_semeval/corpus2/token.txt.gz ./data/en_semeval/targets/targets.tsv ./data/en_semeval/truth/binary.tsv ./data/en_semeval/truth/graded.tsv
+bash ./scripts/classify_sgns.sh ${dataset_id} 10 100 5 0.001 3 3 5 ${threshold} ${mapping} ${w2vec_method} ${language} ${pretrained_embed} ${pretrained_path}
+```
+However, its recommended usage is through **reproduce_experiment.sh**  
 
-# run sgns/cbow without pretrained embeddings (incremental)
-bash ./scripts/classify_sgns.sh 1.0.0 10 50 5 0.001 3 3 5 1.0 incr sgns None None
+### - results (under investigation)
+So far results can be found on **language_drift_results.csv**
 
-# run sgns/cbow with Glove pretrained embeddings (non incremental)
-bash ./scripts/classify_sgns.sh 1.0.0 10 50 5 0.001 3 3 5 1.0 nonincr sgns glove ./pretrained_embed/glove.6B
+
+## Usage
+After completing the installation steps, the appropriate plots are produced from the execution of **create_visualizations.py**
+```
+language = 'en' | 'de' | 'lat' | 'swe'
+embed = 'glove' | 'dewiki' | 'lat_conll17' | ''
+path = './results/**/**/classification'
 ```
 
 ## Support
 
-
 ## Contributing
-
 
 
 ## License
