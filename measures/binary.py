@@ -91,6 +91,7 @@ def main():
 
         # Write binary scores to <path_output>
         with open(path_output, 'w', encoding='utf-8') as f:
+            f.write('word' + '\t' + 'change_binary' + '\n')
             for key, value in binary_scores.items():
                 f.write(key + '\t' + str(value) + '\n')
 

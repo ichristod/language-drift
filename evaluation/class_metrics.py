@@ -15,7 +15,7 @@ def main():
 
     Usage:
         class_metrics.py <path_truth> <path_file>  <path_output> <mapping> <w2vec_algorithm> \
-                         <pretrained> <window_size> <dim> <t> <data_set_id>
+                         <pretrained> <window_size> <dim> <t> <data_set_id> <language>
 
         <path_truth>            = path to binary gold data (tab-separated)
         <path_file>             = path to file containing words and binary values (tab-separated)
@@ -27,6 +27,7 @@ def main():
         <dim>                   = dimensionality of embeddings
         <t>                     = threshold = mean + t * standard error"
         <data_set_id>           = data set identifier
+        <language>              = dataset language
 
     """)
 
@@ -40,6 +41,7 @@ def main():
     dim = args['<dim>']
     t = args['<t>']
     data_set_id = args['<data_set_id>']
+    language = args['<language>']
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info(__file__.upper())
@@ -57,6 +59,7 @@ def main():
     predictions = []
     with open(path_file, 'r', encoding='utf-8') as f:
         reader = csv.reader(f, delimiter='\t')
+        reader.__next__()
         for row in reader:
             predictions.append(int(row[1]))
 
@@ -73,7 +76,7 @@ def main():
     df = pd.DataFrame({'data_set_id':data_set_id,'w2vec_algorithm': w2vec_algorithm, 'pretrained': pretrained,
                        'mapping': mapping, 'dim': dim, 'window_size': window_size,
                        't': t, 'f1': f1, 'accuracy':accuracy, 'recall': recall,
-                       'precision': precision, 't': t},index=[0])
+                       'precision': precision, 't': t, 'language': language},index=[0])
     df.to_pickle(path_output)
 
 
