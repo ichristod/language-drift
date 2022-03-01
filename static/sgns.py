@@ -1,21 +1,20 @@
 import logging
 import sys
 sys.path.append('./modules/')
+
 import time
 import argparse
 import re
-
-from docopt import docopt
 import gensim
 from gensim.models.word2vec import PathLineSentences
 from gensim.models import KeyedVectors
-# from gensim.scripts.glove2word2vec import glove2word2vec
-# from gensim.test.utils import get_tmpfile
+
+
 
 # Acceptable pretrained embeddings dimensions
 pretrained_dim = [50, 100, 200, 300]
 # Acceptable pretrained embeddings
-list_of_pretrained = ['glove']
+list_of_pretrained = ['glove', 'dewiki', 'lat_conll17', 'swe_conll17','spa_conll17']
 
 
 def get_file_prev_version(path_corpus):
@@ -30,7 +29,7 @@ def get_file_prev_version(path_corpus):
     file_path = path_corpus.rsplit('/', 1)[0]
     file_name = path_corpus.rsplit('/', 1)[1]
     previous_version = int([float(n) for n in re.findall(r'-?\d+\.?\d*', file_name)][-1] - 1)
-    previous_file_name = file_name[::-1].replace(str(previous_version+1)[::-1], str(previous_version)[::-1], 1)[::-1]
+    previous_file_name = file_name[::-1].replace(str(previous_version + 1)[::-1], str(previous_version)[::-1], 1)[::-1]
     file_full_path = file_path + "/" + previous_file_name
 
     return previous_version, file_full_path
@@ -51,15 +50,15 @@ def initialize_word2vec_model(path_corpus, algorithm, hs, neg_samples, sampl_thr
     logging.getLogger('gensim').setLevel(logging.ERROR)
     # build vocabulary
     model.build_vocab(vocab_sentences)
-    total_examples=model.corpus_count
+    total_examples = model.corpus_count
     # retrieve sentences
     sentences = PathLineSentences(path_corpus)
 
     return model, total_examples, sentences
 
 
-def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incremental, dim, word2vec_model, total_examples, sentences):
-
+def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incremental, dim, word2vec_model, total_examples,
+                         sentences):
     # check if pretrained embeddings exist
     if not pretrained_matrix:
         word2vec_model.train(sentences, total_examples=total_examples, epochs=word2vec_model.epochs)
@@ -72,17 +71,21 @@ def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incrementa
             word2vec_model.intersect_word2vec_format(embeddings_to_load, binary=False, lockf=1.0)
             word2vec_model.train(sentences, total_examples=total_examples, epochs=word2vec_model.epochs)
 
-
-
     return word2vec_model
 
 
 def retrieve_embeddings_to_load(pretrained_matrix, pretrained_matrix_path, dim, apply_incremental, file_full_path):
-    embeddings_to_load =''
+    embeddings_to_load = ''
     if apply_incremental:
         embeddings_to_load = file_full_path
     elif pretrained_matrix == 'glove':
         embeddings_to_load = pretrained_matrix_path + "/glove.6B." + str(dim) + "d.txt"
+    elif pretrained_matrix == 'dewiki':
+        embeddings_to_load = pretrained_matrix_path + "/data.txt"
+    elif pretrained_matrix == 'lat_conll17':
+        embeddings_to_load = pretrained_matrix_path + "/model.txt"
+    elif pretrained_matrix == 'swe_conll17':
+        embeddings_to_load = pretrained_matrix_path + "/model.txt"
 
     return embeddings_to_load
 
@@ -93,18 +96,22 @@ def main():
     """
 
     # Get the arguments
-    parser = argparse.ArgumentParser(description='Make embedding vector space with Skip-Gram with Negative Sampling from corpus.')
+    parser = argparse.ArgumentParser(
+        description='Make embedding vector space with Skip-Gram with Negative Sampling from corpus.')
 
     parser.add_argument('path_corpus', help='path to corpus directory with zipped files')
     parser.add_argument('path_output', help='output path for vectors')
-    parser.add_argument('window_size', type=int, help='the linear distance of context words to consider in each direction')
+    parser.add_argument('window_size', type=int,
+                        help='the linear distance of context words to consider in each direction')
     parser.add_argument('dim', type=int, help='dimensionality of embeddings')
-    parser.add_argument('k', type=int, help='number of negative samples parameter (equivalent to shifting parameter for PPMI)')
+    parser.add_argument('k', type=int,
+                        help='number of negative samples parameter (equivalent to shifting parameter for PPMI)')
     parser.add_argument('s', help='threshold for subsampling')
     parser.add_argument('min_count', type=int, help='Number of occurrences for a word to be included in the vocabulary')
     parser.add_argument('itera', type=int, help='number of iterations')
     parser.add_argument('mapping', help='indicates type of embeddings mapping')
     parser.add_argument('w2vec_algorithm', help='word2vec algorithm - sgns/cbow')
+    parser.add_argument('language', help='corpus language - en/de/lat/swe')
     parser.add_argument('--pretrained', default='glove', help='option of pretrained embeddings (None, Glove)')
     parser.add_argument('--path_pretrained', help='path to pretrained embeddings directory with txt files')
     parser.add_argument('--len', action='store_true', help='normalize final vectors to unit length')
@@ -120,8 +127,9 @@ def main():
     itera = args.itera
     mapping = args.mapping
     w2vec_algorithm = args.w2vec_algorithm
+    language = args.language
 
-    if args.s=='None':
+    if args.s == 'None':
         s = None
     else:
         s = float(args.s)
@@ -138,18 +146,18 @@ def main():
     start_time = time.time()
 
     if w2vec_algorithm == 'sgns':
-        sg=1
+        sg = 1
     elif w2vec_algorithm == 'cbow':
-        sg=0
+        sg = 0
     else:
         print('ERROR: Definition of word2vec algorithm is missing', file=sys.stderr)
         sys.exit(-1)
 
     # initialize word2vec model
-    model,total_examples,sentences = initialize_word2vec_model(path_corpus=path_corpus,algorithm=sg,
-                                                               hs=0,neg_samples=k,sampl_threshold=s,dim=dim,
-                                                               window_size=window_size,min_count=min_count,
-                                                               iterations=itera,workers=40)
+    model, total_examples, sentences = initialize_word2vec_model(path_corpus=path_corpus, algorithm=sg,
+                                                                 hs=0, neg_samples=k, sampl_threshold=s, dim=dim,
+                                                                 window_size=window_size, min_count=min_count,
+                                                                 iterations=itera, workers=40)
 
     # check incremental training conditions
     if mapping == 'incremental':
@@ -170,8 +178,7 @@ def main():
     else:
         # define embeddings
         embeddings_to_load = retrieve_embeddings_to_load(pretrained, path_pretrained, dim, False, None)
-        model = train_word2vec_model(pretrained, embeddings_to_load, False,dim, model, total_examples, sentences)
-
+        model = train_word2vec_model(pretrained, embeddings_to_load, False, dim, model, total_examples, sentences)
 
     if is_len:
         # L2-normalize vectors
@@ -183,7 +190,6 @@ def main():
 
     logging.info("--- %s seconds ---" % (time.time() - start_time))
     print("")
-
 
 
 if __name__ == '__main__':

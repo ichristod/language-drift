@@ -5,9 +5,7 @@ corpus1_lemma=$2
 corpus2_lemma=$3
 corpus1_token=$4
 corpus2_token=$5
-
 targets=$6
-
 binary_gold=$7
 graded_gold=$8
 
@@ -63,12 +61,11 @@ if [ $# -eq 3 ]
       cp ${corpus1_lemma} data/${data_set_id}/corpus1/lemma.txt.gz
       cp ${corpus2_lemma} data/${data_set_id}/corpus2/lemma.txt.gz
 
-      if [[ "$STR" == *"en_semeval"* ]]
+      if [[ "$corpus1_lemma" == *"semeval"* ]]
           then
             cp ${corpus1_lemma} data/${data_set_id}/corpus1/token.txt.gz
             cp ${corpus2_lemma} data/${data_set_id}/corpus2/token.txt.gz
       fi
-
 fi        
 
 # Store lemma copora and token corpora

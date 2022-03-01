@@ -11,8 +11,9 @@ itera=$8
 t=$9
 mapping=${10}
 w2vec_algorithm=${11}
-pretrained=${12}
-path_pretrained=${13}
+language=${12}
+pretrained=${13}
+path_pretrained=${14}
 
 function usage {
     echo "For a set of target words, decide which words lost or gained sense(s) between C1 and C2."
@@ -29,14 +30,15 @@ function usage {
     echo "      <min_count2>            = number of occurrences for a word to be included in the vocabulary (corpus2)"
     echo "      <itera>                 = number of iterations"
     echo "      <t>                     = threshold = mean + t * standard error"
-    echo "      <mapping>  = indicates incremental learning (incremented,aligned)"
+    echo "      <mapping>               = indicates incremental learning (incremented,aligned)"
     echo "      <w2vec_algorithm>       = cbow | sgns"
+    echo "      <language>              = en|de|swe|lat"
     echo "      <pretrained>  = option of pretrained embeddings (None, glove)"
     echo "      <path_pretrained>   = path to pretrained embeddings directory with txt files"
     echo ""
 }
 
-if [ $# -ne 11 ] && [ $# -ne 13 ]
+if [ $# -ne 12 ] && [ $# -ne 14 ]
 	then
 		usage
 		exit 1
@@ -50,7 +52,7 @@ fi
 
 param_id=${w2vec_algorithm}_win${window_size}_dim${dim}_k${k}_s${s}_mc${min_count1}_mc${min_count2}_i${itera}_${mapping}
 
-if [ $# -eq 13 ]
+if [ $# -eq 14 ]
   then
     param_id+=_${pretrained}
 fi
@@ -63,8 +65,8 @@ mkdir -p ${resdir}
 
 
 # Generate word embeddins with SGNS
-python static/sgns.py --len data/${data_set_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${itera} ${mapping} ${w2vec_algorithm} --pretrained ${pretrained} --path_pretrained ${path_pretrained}
-python static/sgns.py --len data/${data_set_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${itera} ${mapping} ${w2vec_algorithm} --pretrained ${pretrained} --path_pretrained ${path_pretrained}
+python static/sgns.py --len data/${data_set_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${itera} ${mapping} ${w2vec_algorithm} ${language} --pretrained ${pretrained} --path_pretrained ${path_pretrained}
+python static/sgns.py --len data/${data_set_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${itera} ${mapping} ${w2vec_algorithm} ${language} --pretrained ${pretrained} --path_pretrained ${path_pretrained}
 
 
 if [ "$mapping" == "alignment" ]
@@ -73,11 +75,11 @@ if [ "$mapping" == "alignment" ]
     # Length-normalize, meanc-center and align with OP
     python modules/map_embeddings.py --init_identical --orthogonal ${outdir}/mat1 ${outdir}/mat2 ${outdir}/mat1ca ${outdir}/mat2ca
     # Measure CD for every word in the intersection
-    # python measures/cd.py ${outdir}/mat1ca ${outdir}/mat2ca ${resdir}/distances_intersection.tsv
+    python measures/cd.py ${outdir}/mat1ca ${outdir}/mat2ca ${resdir}/distances_intersection.tsv
     # Measure CD for every target word
     python measures/cd.py ${outdir}/mat1ca ${outdir}/mat2ca data/${data_set_id}/targets/targets.tsv ${resdir}/distances_targets.tsv
     #Calculate jaccard index for target words' topN neighbors
-    python measures/jaccard_neighbors.py ${outdir}/mat1ca ${outdir}/mat2ca data/${data_set_id}/targets/targets.tsv ${window_size} ${resdir}/jaccard_index_report.csv
+    #python measures/jaccard_neighbors.py ${outdir}/mat1ca ${outdir}/mat2ca data/${data_set_id}/targets/targets.tsv ${window_size} ${resdir}/jaccard_index_report.csv
 
 elif [ "$mapping" == "incremental" ]
   then
@@ -86,8 +88,8 @@ elif [ "$mapping" == "incremental" ]
     python measures/cd.py ${outdir}/mat1 ${outdir}/mat2 ${resdir}/distances_intersection.tsv
     # Measure CD for every word in the intersection of the vocabularies
     python measures/cd.py ${outdir}/mat1 ${outdir}/mat2 data/${data_set_id}/targets/targets.tsv ${resdir}/distances_targets.tsv
-    #Calculate jaccard index for target words' topN neighbors
-    python measures/jaccard_neighbors.py ${outdir}/mat1 ${outdir}/mat2 data/${data_set_id}/targets/targets.tsv ${window_size} ${resdir}/jaccard_index_report.csv
+    # Calculate jaccard index for target words' topN neighbors
+    # python measures/jaccard_neighbors.py ${outdir}/mat1 ${outdir}/mat2 data/${data_set_id}/targets/targets.tsv ${window_size} ${resdir}/jaccard_index_report.csv
 fi
 
 # Compute binary scores for targets
@@ -98,6 +100,17 @@ python measures/binary.py ${resdir}/distances_intersection.tsv ${resdir}/distanc
 #python modules/filter1.py ${resdir}/distances_targets.tsv ${resdir}/predictions_f1.tsv ${language}
 
 # Calculate classification performance
-python evaluation/class_metrics.py data/${data_set_id}/truth/binary.tsv ${resdir}/scores_targets.tsv ${resdir}/pickled_classification_res.pkl ${mapping} ${w2vec_algorithm} ${pretrained} ${window_size} ${dim} ${t} ${data_set_id}
+python evaluation/class_metrics.py data/${data_set_id}/truth/binary.tsv ${resdir}/scores_targets.tsv ${resdir}/pickled_classification_res.pkl ${mapping} ${w2vec_algorithm} ${pretrained} ${window_size} ${dim} ${t} ${data_set_id} ${language}
 
-# Create results visualization
+: '
+# Create results visualization for semeval
+if [[ "$data_set_id" == *"semeval"* ]]
+  then
+    pickle_path= $(dirname ${pwd})
+    python visualizations/create_visualizations.py ${pickle_path}
+fi
+'
+
+
+
+
