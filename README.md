@@ -94,22 +94,22 @@ path = './results/**/**/classification'
 ```
 ## Results
 
-####English
+#### English
 
 ![English](/visualizations/images/en_mappings.png?raw=true "mappings")
 ![English](/visualizations/images/en_thresholds.png?raw=true "thresholds")
 
-####German
+#### German
 
 ![German](/visualizations/images/de_mappings.png?raw=true "mappings")
 ![German](/visualizations/images/de_thresholds.png?raw=true "thresholds")
 
-####Latin
+#### Latin
 
 ![Latin](/visualizations/images/lat_mappings.png?raw=true "mappings")
 ![Latin](/visualizations/images/lat_thresholds.png?raw=true "thresholds")
 
-####Swedish
+#### Swedish
 
 ![Swedish](/visualizations/images/swe_mappings.png?raw=true "mappings")
 ![Swedish](/visualizations/images/swe_thresholds.png?raw=true "thresholds")
