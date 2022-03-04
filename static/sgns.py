@@ -111,7 +111,6 @@ def main():
     parser.add_argument('itera', type=int, help='number of iterations')
     parser.add_argument('mapping', help='indicates type of embeddings mapping')
     parser.add_argument('w2vec_algorithm', help='word2vec algorithm - sgns/cbow')
-    parser.add_argument('language', help='corpus language - en/de/lat/swe')
     parser.add_argument('--pretrained', default='glove', help='option of pretrained embeddings (None, Glove)')
     parser.add_argument('--path_pretrained', help='path to pretrained embeddings directory with txt files')
     parser.add_argument('--len', action='store_true', help='normalize final vectors to unit length')
@@ -127,7 +126,6 @@ def main():
     itera = args.itera
     mapping = args.mapping
     w2vec_algorithm = args.w2vec_algorithm
-    language = args.language
 
     if args.s == 'None':
         s = None
