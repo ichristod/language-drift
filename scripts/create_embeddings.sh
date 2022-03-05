@@ -9,7 +9,7 @@ min_count1=$6
 min_count2=$7
 itera=$8
 t=$9
-mapping=${10}
+incremental=${10}
 w2vec_algorithm=${11}
 pretrained=${12}
 path_pretrained=${13}
@@ -29,7 +29,7 @@ function usage {
     echo "      <min_count2>            = number of occurrences for a word to be included in the vocabulary (corpus2)"
     echo "      <itera>                 = number of iterations"
     echo "      <t>                     = threshold = mean + t * standard error"
-    echo "      <mapping>               = indicates incremental learning (incremental,procrustes)"
+    echo "      <incremental>           = indicates incremental learning (incremental)"
     echo "      <w2vec_algorithm>       = cbow | sgns"
     echo "      <pretrained>            = option of pretrained embeddings (None, glove)"
     echo "      <path_pretrained>       = path to pretrained embeddings directory with txt files"
@@ -48,14 +48,20 @@ if [[ ( $1 == "--help") ||  $1 == "-h" ]]
 		exit 0
 fi
 
-param_id=${w2vec_algorithm}_win${window_size}_dim${dim}_k${k}_s${s}_mc${min_count1}_mc${min_count2}_i${itera}_${mapping}
+param_id=${w2vec_algorithm}_win${window_size}_dim${dim}_k${k}_s${s}_mc${min_count1}_mc${min_count2}_i${itera}_${incremental}
+
+if [[ $incremental == true ]]
+  then
+    param_id+=_"incremental"
+fi
+
 
 if [ $# -eq 13 ]
   then
     param_id+=_${pretrained}
 fi
 
-outdir=output/${data_set_id}/${param_id}/classification/t${t}
+outdir=output/${data_set_id}/${param_id}
 
 mkdir -p ${outdir}
 mkdir -p ${resdir}

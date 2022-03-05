@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # load all execution parameters
-. exec.conf
+. executions-configuration/exec.conf
 
 # TODO
 # Create a kind of dictionary type in configuration file
@@ -28,6 +28,7 @@ identify_appropriate_pretrained () {
 # check task
 if $binary_classification; then
   for language in ${languages[*]}; do
+
     # download datasets if needed
     if $download_datasets ; then
       import_script="import_semeval"_${language}
@@ -48,7 +49,7 @@ if $binary_classification; then
     fi
 
     # executions' output folder
-    exec_dir=./../output/${data_set_id}/*
+    exec_dir=output/${dataset_id}/*/
 
     # finally execute the experiment :-)
     for action in $actions; do
@@ -56,27 +57,37 @@ if $binary_classification; then
       # create embeddings for every different algorithm
       if [[ $action == "train" ]]; then
         for w2vec_method in $w2vec_methods; do
-          # parameter to indicate execution's folder name
-          param_id=${w2vec_algorithm}_win${window_size}_dim${dim}_k${k}_s${s}_mc${min_count1}_mc${min_count2}_i${epochs}_${mapping}_${pretrained}
+          echo "w2vec_method: "${w2vec_method}
 
-          # output folder for models
-          outdir=output/${data_set_id}/${param_id}/trained_models
+          for mapping in $mappings; do
 
-          # output folder
-          mkdir -p ${outdir}
+            param_id=${w2vec_method}_win${window_size}_dim${dim}_k${k}_s${s}_mc${min_count1}_mc${min_count2}_i${epochs}_${mapping}
 
-          if $use_pretrained; then
+            if $use_pretrained; then
+              # define pretrained embeddings path
+              identify_appropriate_pretrained
 
-            # define pretrained embeddings path
-            identify_appropriate_pretrained
-            # Generate word embeddings with pretrained weights initialization
-            python static/sgns.py --len data/${data_set_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
-            python static/sgns.py --len data/${data_set_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
+              param_id_embed=${param_id}_${pretrained_embed}
+              # parameter to indicate execution's folder name
 
-          fi
-          # Generate word embeddings with stochastic weights initialization
-          python static/sgns.py --len data/${data_set_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
-          python static/sgns.py --len data/${data_set_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+              # output folder of models with pretrained weights initialization
+              outdir=output/${dataset_id}/${param_id_embed}/trained_models
+              mkdir -p ${outdir}
+
+              # Generate word embeddings with pretrained weights initialization
+              python static/sgns.py --len data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
+              python static/sgns.py --len data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
+
+            fi
+
+            # output folder of models with stochastic weights initialization
+            outdir=output/${dataset_id}/${param_id}/trained_models
+            mkdir -p ${outdir}
+
+            # Generate word embeddings with stochastic weights initialization
+            python static/sgns.py --len data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+            python static/sgns.py --len data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+          done
         done
       fi
 
@@ -93,17 +104,17 @@ if $binary_classification; then
             param_id="${dir##*/}"
 
             # folder of trained models
-            traindir=output/${data_set_id}/${param_id}/trained_models
+            traindir=output/${dataset_id}/${param_id}/trained_models
             # output folder of common space models
-            outdir=output/${data_set_id}/${param_id}/common_space_models
+            outdir=output/${dataset_id}/${param_id}/common_space_models
             # results folder
-            resdir=output/${data_set_id}/${param_id}/distances
+            resdir=output/${dataset_id}/${param_id}/distances
             # create output and results folder
             mkdir -p ${outdir}
             mkdir -p ${resdir}
 
             # actual creation of comparable objects
-            bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${data_set_id} ${traindir}
+            bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir}
           done
         done
       fi
@@ -123,10 +134,10 @@ if $binary_classification; then
             param_id="${dir##*/}"
 
             # calculated distances folder
-            distdir=output/${data_set_id}/${param_id}/distances
+            distdir=output/${dataset_id}/${param_id}/distances
 
             # results folder
-            outdir=output/${data_set_id}/${param_id}/results/t${thres_percentage}
+            outdir=output/${dataset_id}/${param_id}/results/t${thres_percentage}
             mkdir -p ${outdir}
 
             # Compute binary scores for targets
@@ -139,7 +150,7 @@ if $binary_classification; then
             # cbow_win10_dim100_k5_s0.001_mc3_mc3_i5_alignment_glove
 
             # Calculate classification performance
-            python evaluation/class_metrics.py data/${data_set_id}/truth/binary.tsv ${outdir}/scores_targets.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${data_set_id} ${language}
+            python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language}
 
           done
         done

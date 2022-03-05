@@ -110,7 +110,7 @@ def main():
     parser.add_argument('min_count', type=int, help='Number of occurrences for a word to be included in the vocabulary')
     parser.add_argument('itera', type=int, help='number of iterations')
     parser.add_argument('mapping', help='indicates type of embeddings mapping')
-    parser.add_argument('w2vec_algorithm', help='word2vec algorithm - sgns/cbow')
+    parser.add_argument('w2vec_method', help='word2vec algorithm - sgns/cbow')
     parser.add_argument('--pretrained', default='glove', help='option of pretrained embeddings (None, Glove)')
     parser.add_argument('--path_pretrained', help='path to pretrained embeddings directory with txt files')
     parser.add_argument('--len', action='store_true', help='normalize final vectors to unit length')
@@ -125,7 +125,7 @@ def main():
     min_count = args.min_count
     itera = args.itera
     mapping = args.mapping
-    w2vec_algorithm = args.w2vec_algorithm
+    w2vec_method = args.w2vec_method
 
     if args.s == 'None':
         s = None
@@ -143,9 +143,9 @@ def main():
     logging.info(__file__.upper())
     start_time = time.time()
 
-    if w2vec_algorithm == 'sgns':
+    if w2vec_method == 'sgns':
         sg = 1
-    elif w2vec_algorithm == 'cbow':
+    elif w2vec_method == 'cbow':
         sg = 0
     else:
         print('ERROR: Definition of word2vec algorithm is missing', file=sys.stderr)
