@@ -13,16 +13,70 @@ identify_appropriate_pretrained () {
   elif [ "$language" == "de" ]
     then
       pretrained_embed=dewiki
-      pretrained_path=./pretrained_embed/dewiki
+      pretrained_path=./pretrained_embed/${pretrained_embed}
   elif [ "$language" == "lat" ]
     then
-      pretrained_embed=lat_conll17
-      pretrained_path=./pretrained_embed/lat_conll17
+      pretrained_embed=latconll17
+      pretrained_path=./pretrained_embed/${pretrained_embed}
   elif [ "$language" == "swe" ]
     then
-      pretrained_embed=swe_conll17
-      pretrained_path=./pretrained_embed/swe_conll17
+      pretrained_embed=sweconll17
+      pretrained_path=./pretrained_embed/${pretrained_embed}
   fi
+}
+
+function retrieve_parameters_from_path(){
+  #param_id=cbow_win10_dim100_k5_s0.001_mc3_mc3_i5_alignment_glove
+  param_id=$1
+
+  # split path with to different elements of array
+  # our delimeter is '_'
+  IFS='_' read -ra params <<< "$param_id"
+
+  # set pretrained embeddings name
+  if [[ ${#params[@]} == 10 ]]
+    then
+      pretrained_embed="${params[9]}"
+  else
+    pretrained_embed="None"
+  fi
+
+  for i in "${params[@]}"; do
+    value=$(echo "${i}" | tr -dc '0-9.')
+    name=$(echo "${i}" | tr -dc 'a-z')
+
+    # check categorical parameters
+    if [ -z "${value}" ];
+      then
+        case ${name} in
+          "cbow"|"sgns")
+            w2vec_method=${name}
+            ;;
+
+          "incremental"|"procrustes")
+            mapping=${name}
+            ;;
+
+          *)
+            ;;
+        esac
+    else
+      case ${name} in
+        "win")
+        window_size=${value}
+        ;;
+
+        "dim")
+        dim=${value}
+        ;;
+
+        *)
+        ;;
+      esac
+    fi
+  done
+
+  echo ${window_size} ${dim} ${w2vec_method} ${mapping} ${pretrained_embed}
 }
 
 # check task
@@ -141,13 +195,9 @@ if $binary_classification; then
             mkdir -p ${outdir}
 
             # Compute binary scores for targets
-            python measures/binary.py ${resdir}/distances_intersection.tsv ${distdir}/distances_targets.tsv ${outdir}/scores_targets.tsv " ${thres_percentage} "
+            python measures/binary.py ${distdir}/distances_intersection.tsv ${distdir}/distances_targets.tsv ${outdir}/scores_targets.tsv " ${thres_percentage} "
 
-            # Apply filter1
-            # keep only 'NOUN','VERB' and 'ADJ' according to spacy
-            #python modules/filter1.py ${resdir}/distances_targets.tsv ${resdir}/predictions_f1.tsv ${language}
-
-            # cbow_win10_dim100_k5_s0.001_mc3_mc3_i5_alignment_glove
+            retrieve_parameters_from_path ${param_id}
 
             # Calculate classification performance
             python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language}

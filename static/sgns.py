@@ -14,7 +14,7 @@ from gensim.models import KeyedVectors
 # Acceptable pretrained embeddings dimensions
 pretrained_dim = [50, 100, 200, 300]
 # Acceptable pretrained embeddings
-list_of_pretrained = ['glove', 'dewiki', 'lat_conll17', 'swe_conll17','spa_conll17']
+list_of_pretrained = ['glove', 'dewiki', 'latconll17', 'sweconll17','spaconll17']
 
 
 def get_file_prev_version(path_corpus):
@@ -82,9 +82,9 @@ def retrieve_embeddings_to_load(pretrained_matrix, pretrained_matrix_path, dim, 
         embeddings_to_load = pretrained_matrix_path + "/glove.6B." + str(dim) + "d.txt"
     elif pretrained_matrix == 'dewiki':
         embeddings_to_load = pretrained_matrix_path + "/data.txt"
-    elif pretrained_matrix == 'lat_conll17':
+    elif pretrained_matrix == 'latconll17':
         embeddings_to_load = pretrained_matrix_path + "/model.txt"
-    elif pretrained_matrix == 'swe_conll17':
+    elif pretrained_matrix == 'sweconll17':
         embeddings_to_load = pretrained_matrix_path + "/model.txt"
 
     return embeddings_to_load

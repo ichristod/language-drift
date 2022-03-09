@@ -16,13 +16,13 @@ def main():
     args = docopt("""Compute binary scores for taget words.
     
     Usage:
-        binary.py <path_distances> <path_output> <t>
-        binary.py <path_distances> <path_targets> <path_output> <t> 
+        binary.py <path_distances> <path_output> <thres_percentage>
+        binary.py <path_distances> <path_targets> <path_output> <thres_percentage> 
  
         <path_distances>    = path to file containing word distance pairs (tab-separated)
         <path_targets>      = path to file containing target words (optional for binary classification)
         <path_output>       = output path for result file
-        <t>                 = threshold = mean + t * std   
+        <thres_percentage>  = mean + thres_percentage * std   
         
     Note:
         Choose the first usage to discover changing words in <path_distances>.
@@ -33,7 +33,7 @@ def main():
     path_distances = args['<path_distances>']
     path_targets = args['<path_targets>']
     path_output = args['<path_output>']
-    t = float(args['<t>'])
+    thres_percentage = float(args['<thres_percentage>'])
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info(__file__.upper())
@@ -51,11 +51,12 @@ def main():
 
     # Compute mean, std and threshold
     list_distances = np.array(list(distances.values()))
+    upper_quantile = np.quantile(list_distances, thres_percentage)
+    list_distances = list_distances[list_distances < upper_quantile]
 
     mean = np.mean(list_distances, axis=0)
-    std = np.std(list_distances, axis=0)
     stde = sem(list_distances, axis=0)
-    threshold = mean + t * stde
+    threshold = mean + stde
 
     # Usage 1: discover changing words 
     if path_targets == None:
