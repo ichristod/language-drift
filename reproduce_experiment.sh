@@ -53,7 +53,7 @@ function retrieve_parameters_from_path(){
             w2vec_method=${name}
             ;;
 
-          "incremental"|"procrustes")
+          "incremental"|"procrustes"|"twec")
             mapping=${name}
             ;;
 
@@ -76,7 +76,7 @@ function retrieve_parameters_from_path(){
     fi
   done
 
-  echo ${window_size} ${dim} ${w2vec_method} ${mapping} ${pretrained_embed}
+  echo "Retrieved parameters: "${window_size} ${dim} ${w2vec_method} ${mapping} ${pretrained_embed}
 }
 
 # check task
@@ -126,21 +126,52 @@ if $binary_classification; then
 
               # output folder of models with pretrained weights initialization
               outdir=output/${dataset_id}/${param_id_embed}/trained_models
-              mkdir -p ${outdir}
 
-              # Generate word embeddings with pretrained weights initialization
-              python static/sgns.py --len data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
-              python static/sgns.py --len data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
+              # check if training scenario has already been executed
+              if [ ! -d "$outdir" ]; then
+
+                echo \"${param_id_embed}\""  TRAINING SCENARIO STARTED!!"
+
+                # create scenario folder
+                mkdir -p ${outdir}
+
+                # create embeddings for concatenated corpus
+                if [[ $mapping == "twec" ]]; then
+                  python static/sgns.py data/${dataset_id}/corpus_concat/lemma.txt.gz ${outdir}/corpus_concat ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
+                fi
+
+                # Generate word embeddings with pretrained weights initialization
+                python static/sgns.py data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
+                python static/sgns.py data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained ${pretrained_embed} --path_pretrained ${pretrained_path}
+              else
+                echo \"${param_id_embed}\""  TRAINING HAS ALREADY BEEN EXECUTED!!"
+              fi
+
 
             fi
 
             # output folder of models with stochastic weights initialization
             outdir=output/${dataset_id}/${param_id}/trained_models
-            mkdir -p ${outdir}
 
-            # Generate word embeddings with stochastic weights initialization
-            python static/sgns.py --len data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
-            python static/sgns.py --len data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+            # check if training scenario has already been executed
+            if [ ! -d "$outdir" ]; then
+
+              echo \"${param_id_embed}\""  TRAINING SCENARIO STARTED!!"
+
+              # create scenario folder
+              mkdir -p ${outdir}
+
+              # create embeddings of full corpus
+              if [[ $mapping == "twec" ]]; then
+                python static/sgns.py data/${dataset_id}/corpus_concat/lemma.txt.gz ${outdir}/corpus_concat ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+              fi
+
+              # Generate word embeddings with stochastic weights initialization
+              python static/sgns.py data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+              python static/sgns.py data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+            else
+              echo \"${param_id}\""  TRAINING HAS ALREADY BEEN EXECUTED!!"
+            fi
           done
         done
       fi
@@ -157,18 +188,31 @@ if $binary_classification; then
             # cbow_win10_dim100_k5_s0.001_mc3_mc3_i5_alignment_glove
             param_id="${dir##*/}"
 
-            # folder of trained models
-            traindir=output/${dataset_id}/${param_id}/trained_models
-            # output folder of common space models
-            outdir=output/${dataset_id}/${param_id}/common_space_models
-            # results folder
-            resdir=output/${dataset_id}/${param_id}/distances
-            # create output and results folder
-            mkdir -p ${outdir}
-            mkdir -p ${resdir}
+            # do for experiments that match the loop variable "mapping"
+            if [[ "$param_id" =~ .*"$mapping".* ]]; then
 
-            # actual creation of comparable objects
-            bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir}
+              echo \"${param_id}\""  ALIGNMENT STARTED!!"
+
+              # folder of trained models
+              traindir=output/${dataset_id}/${param_id}/trained_models
+              echo ""
+              # output folder of common space models
+              outdir=output/${dataset_id}/${param_id}/common_space_models
+              # results folder
+              resdir=output/${dataset_id}/${param_id}/distances
+
+              # check if alignment scenario has already been executed
+              if [ ! -d "$outdir" ]; then
+                # create output and results folder
+                mkdir -p ${outdir}
+                mkdir -p ${resdir}
+
+                # actual creation of comparable objects
+                bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors}
+              else
+                echo \"${param_id}\""  ALIGNMENT HAS ALREADY BEEN EXECUTED!!"
+              fi
+            fi
           done
         done
       fi
@@ -192,16 +236,26 @@ if $binary_classification; then
 
             # results folder
             outdir=output/${dataset_id}/${param_id}/results/t${thres_percentage}
-            mkdir -p ${outdir}
+            if [ ! -d "$outdir" ]; then
 
-            # Compute binary scores for targets
-            python measures/binary.py ${distdir}/distances_intersection.tsv ${distdir}/distances_targets.tsv ${outdir}/scores_targets.tsv " ${thres_percentage} "
+              echo \"${param_id_embed}\""  EVALUATION STARTED!!"
 
-            retrieve_parameters_from_path ${param_id}
+              mkdir -p ${outdir}
 
-            # Calculate classification performance
-            python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language}
+              echo "param_id: "${param_id}", distdir: "${distdir}", outdir: "${outdir}
+              # Compute binary scores for cosine distance measure
+              python measures/binary.py ${distdir}/distances_intersection.tsv ${distdir}/distances_targets.tsv ${outdir}/scores_targets_cd.tsv " ${thres_percentage} "
+              # Compute binary scores for local neighborhood distance measure
+              python measures/binary.py ${distdir}/local_neighborhood_distances.tsv ${distdir}/local_neighborhood_distances.tsv ${outdir}/scores_targets_ln.tsv " ${thres_percentage} "
 
+              retrieve_parameters_from_path ${param_id}
+
+              # Calculate classification performance
+              python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
+              python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+            else
+              echo \"${param_id}\""  EVALUATION HAS ALREADY BEEN EXECUTED!!"
+            fi
           done
         done
       fi

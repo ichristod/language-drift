@@ -54,17 +54,22 @@ fi
 
 mkdir -p data/${data_set_id}/corpus1
 mkdir -p data/${data_set_id}/corpus2
+mkdir -p data/${data_set_id}/corpus_concat
 
 # If used if a single corpus pair
 if [ $# -eq 3 ]
     then
       cp ${corpus1_lemma} data/${data_set_id}/corpus1/lemma.txt.gz
       cp ${corpus2_lemma} data/${data_set_id}/corpus2/lemma.txt.gz
+      # concatenate lemma version of coprus into one file (twec)
+      cat ${corpus1_lemma} ${corpus2_lemma} > data/${data_set_id}/corpus_concat/lemma.txt.gz
 
       if [[ "$corpus1_lemma" == *"semeval"* ]]
           then
-            cp ${corpus1_lemma} data/${data_set_id}/corpus1/token.txt.gz
-            cp ${corpus2_lemma} data/${data_set_id}/corpus2/token.txt.gz
+            cp ${corpus1_token} data/${data_set_id}/corpus1/token.txt.gz
+            cp ${corpus2_token} data/${data_set_id}/corpus2/token.txt.gz
+            # concatenate token version of coprus into one file (twec)
+            cat ${corpus1_token} ${corpus2_token} > data/${data_set_id}/corpus_concat/token.txt.gz
       fi
 fi        
 
@@ -73,9 +78,13 @@ if [ $# -eq 6 ] || [ $# -eq 8 ]
     then
         cp ${corpus1_lemma} data/${data_set_id}/corpus1/lemma.txt.gz
         cp ${corpus2_lemma} data/${data_set_id}/corpus2/lemma.txt.gz
+        # concatenate lemma version of coprus into one file (twec)
+        cat ${corpus1_lemma} ${corpus2_lemma} > data/${data_set_id}/corpus_concat/lemma.txt.gz
 
         cp ${corpus1_token} data/${data_set_id}/corpus1/token.txt.gz
         cp ${corpus2_token} data/${data_set_id}/corpus2/token.txt.gz
+        # concatenate token version of coprus into one file (twec)
+        cat ${corpus1_token} ${corpus2_token} > data/${data_set_id}/corpus_concat/token.txt.gz
 fi
 
 # Store target words

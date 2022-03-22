@@ -15,7 +15,7 @@ def main():
 
     Usage:
         class_metrics.py <path_truth> <path_file>  <path_output> <mapping> <w2vec_algorithm> \
-                         <pretrained> <window_size> <dim> <t> <data_set_id> <language>
+                         <pretrained> <window_size> <dim> <t> <data_set_id> <language> <measure>
 
         <path_truth>            = path to binary gold data (tab-separated)
         <path_file>             = path to file containing words and binary values (tab-separated)
@@ -28,6 +28,7 @@ def main():
         <t>                     = threshold = mean + t * standard error"
         <data_set_id>           = data set identifier
         <language>              = dataset language
+        <measure>               = distance measure
 
     """)
 
@@ -42,6 +43,7 @@ def main():
     t = args['<t>']
     data_set_id = args['<data_set_id>']
     language = args['<language>']
+    measure = args['<measure>']
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info(__file__.upper())
@@ -73,11 +75,22 @@ def main():
     recall = round(recall, 3)
     f1 = round(f1, 3)
 
-    df = pd.DataFrame({'data_set_id':data_set_id,'w2vec_algorithm': w2vec_algorithm, 'pretrained': pretrained,
+    df = pd.DataFrame({'data_set_id': data_set_id, 'w2vec_algorithm': w2vec_algorithm, 'pretrained': pretrained,
                        'mapping': mapping, 'dim': dim, 'window_size': window_size,
-                       't': t, 'f1': f1, 'accuracy':accuracy, 'recall': recall,
-                       'precision': precision, 't': t, 'language': language},index=[0])
-    df.to_pickle(path_output)
+                       't': t, 'f1': f1, 'accuracy': accuracy, 'recall': recall,
+                       'precision': precision, 't': t, 'language': language}, index=[0])
+
+    if measure == 'cosine_distance':
+        shdes='cd'
+        df.rename({'f1': 'f1_cd', 'accuracy': 'accuracy_cd', 'recall': 'recall_cd',
+                   'precision': 'precision_cd'}, axis=1, inplace=True)
+    elif measure == 'local_neighborhood_distance':
+        shdes='ln'
+        df.rename({'f1': 'f1_ln', 'accuracy': 'accuracy_ln', 'recall': 'recall_ln',
+                   'precision': 'precision_ln'}, axis=1, inplace=True)
+
+    path = path_output.rsplit('/', 1)[0]
+    df.to_pickle(path+"/pickled_classification_"+shdes+".pkl")
 
 
     logging.info("--- %s seconds ---" % (time.time() - start_time))    

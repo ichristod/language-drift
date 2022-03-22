@@ -1,38 +1,19 @@
-import logging
-import sys
-sys.path.append('./modules/')
-
 import time
 import argparse
 import re
 import gensim
+import logging
+
 from gensim.models.word2vec import PathLineSentences
 from gensim.models import KeyedVectors
-
-
+from twec import TWEC
+from training_utils import get_file_prev_version,get_full_corpus_model,retrieve_embeddings_to_load
+import sys
 
 # Acceptable pretrained embeddings dimensions
 pretrained_dim = [50, 100, 200, 300]
 # Acceptable pretrained embeddings
 list_of_pretrained = ['glove', 'dewiki', 'latconll17', 'sweconll17','spaconll17']
-
-
-def get_file_prev_version(path_corpus):
-    """"
-    example values:
-    file_path           --> output/1st-try/sgns_win10_dim50_k5_s0.001_mc3_mc3_i5_nonincr_glove/discovery/t1.0
-    file_name           --> mat32t32
-    previous_version    -->  31
-    previous_file_name  --> ma32t31
-    file_full_path      --> output/1st-try/sgns_win10_dim50_k5_s0.001_mc3_mc3_i5_nonincr_glove/discovery/t1.0/mat32t31
-    """
-    file_path = path_corpus.rsplit('/', 1)[0]
-    file_name = path_corpus.rsplit('/', 1)[1]
-    previous_version = int([float(n) for n in re.findall(r'-?\d+\.?\d*', file_name)][-1] - 1)
-    previous_file_name = file_name[::-1].replace(str(previous_version + 1)[::-1], str(previous_version)[::-1], 1)[::-1]
-    file_full_path = file_path + "/" + previous_file_name
-
-    return previous_version, file_full_path
 
 
 def initialize_word2vec_model(path_corpus, algorithm, hs, neg_samples, sampl_threshold, dim,
@@ -57,12 +38,12 @@ def initialize_word2vec_model(path_corpus, algorithm, hs, neg_samples, sampl_thr
     return model, total_examples, sentences
 
 
-def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incremental, dim, word2vec_model, total_examples,
+def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incremental, apply_twec, dim, word2vec_model, total_examples,
                          sentences):
     # check if pretrained embeddings exist
     if not pretrained_matrix:
         word2vec_model.train(sentences, total_examples=total_examples, epochs=word2vec_model.epochs)
-    elif (pretrained_matrix in list_of_pretrained) or apply_incremental:
+    elif (pretrained_matrix in list_of_pretrained) or apply_incremental or apply_twec:
         # check if exists pretrained embedding with given dimensions
         if dim in pretrained_dim:
             # initialize embeddings
@@ -72,22 +53,6 @@ def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incrementa
             word2vec_model.train(sentences, total_examples=total_examples, epochs=word2vec_model.epochs)
 
     return word2vec_model
-
-
-def retrieve_embeddings_to_load(pretrained_matrix, pretrained_matrix_path, dim, apply_incremental, file_full_path):
-    embeddings_to_load = ''
-    if apply_incremental:
-        embeddings_to_load = file_full_path
-    elif pretrained_matrix == 'glove':
-        embeddings_to_load = pretrained_matrix_path + "/glove.6B." + str(dim) + "d.txt"
-    elif pretrained_matrix == 'dewiki':
-        embeddings_to_load = pretrained_matrix_path + "/data.txt"
-    elif pretrained_matrix == 'latconll17':
-        embeddings_to_load = pretrained_matrix_path + "/model.txt"
-    elif pretrained_matrix == 'sweconll17':
-        embeddings_to_load = pretrained_matrix_path + "/model.txt"
-
-    return embeddings_to_load
 
 
 def main():
@@ -167,24 +132,47 @@ def main():
             # load previous model
             embeddings_to_load = retrieve_embeddings_to_load(
                 pretrained, path_pretrained, dim, True, file_full_path)
-            model = train_word2vec_model(pretrained, embeddings_to_load, True, dim, model, total_examples, sentences)
+            print("Incremental: second corpus")
+            model = train_word2vec_model(pretrained, embeddings_to_load, True, False,
+                                         dim, model, total_examples, sentences)
         else:
             # initial training of corpus1 without pretrained embeddings
+
             embeddings_to_load = retrieve_embeddings_to_load(
                 pretrained, path_pretrained, dim, False, file_full_path)
-            model = train_word2vec_model(pretrained, embeddings_to_load, False, dim, model, total_examples, sentences)
+            print("Incremental: train first corpus")
+            model = train_word2vec_model(pretrained, embeddings_to_load, False, False,
+                                         dim, model, total_examples, sentences)
+    elif mapping == 'twec':
+        file_full_path = get_full_corpus_model(path_output)
+        aligner = TWEC(size=dim, siter=model.epochs, diter=model.epochs, workers=model.workers,
+                               sg=model.sg, ns=model.negative, min_count=model.vocabulary.min_count, window=model.window)
+
+        if file_full_path:
+            # load full corpus model if any
+            print("TWEC: train slices")
+            aligner.train_slice(path_corpus, path_output, save=True)
+
+        else:
+            # initialize full corpus model
+            print("TWEC: train full corpus")
+            # train the compass: the text should be the concatenation of the text from the slices
+            aligner.train_compass(path_corpus, path_output, overwrite=False)
     else:
         # define embeddings
+        print("Baseline training")
         embeddings_to_load = retrieve_embeddings_to_load(pretrained, path_pretrained, dim, False, None)
-        model = train_word2vec_model(pretrained, embeddings_to_load, False, dim, model, total_examples, sentences)
+        model = train_word2vec_model(pretrained, embeddings_to_load, False, False,
+                                     dim, model, total_examples, sentences)
 
-    if is_len:
+    if is_len and mapping != 'twec':
         # L2-normalize vectors
         model.init_sims(replace=True)
 
-    # Save the vectors and the model
-    model.wv.save_word2vec_format(path_output)
-    model.save(path_output + '.model')
+    if mapping !='twec':
+        # Save the vectors and the model
+        model.wv.save_word2vec_format(path_output)
+        model.save(path_output + '.model')
 
     logging.info("--- %s seconds ---" % (time.time() - start_time))
     print("")
