@@ -64,6 +64,8 @@ The main parameters of the reproduce_experiment script are:
 - mappings
   - **alignment** with orthogonal procrustes
   - **incremental** fine-tuning approach
+  - **twec** temporal word embeddings with compass
+- top neighbors of local neighborhood measure - e.g. **5**, **10**
 - threshold multiplier - e.g. **1.0**, **1.5**, **2.0**
 - version of the execution - e.g. **1.0.0**
 
@@ -116,7 +118,11 @@ path = './results/**/**/classification'
 
 ## Support
 
-## Contributing
+## Credits
+Parts of the code rely on [LSCDetection](https://github.com/Garrafao/LSCDetection), [fuzzywuzzy](https://github.com/seatgeek/fuzzywuzzy), [gensim](https://github.com/rare-technologies/gensim), [numpy](https://pypi.org/project/numpy/), [scikit-learn](https://pypi.org/project/scikit-learn/), [scipy](https://pypi.org/project/scipy/), [VecMap](https://github.com/artetxem/vecmap), [TWEC](https://github.com/valedica/twec)
+
+
+## Contribute
 
 
 ## License
