@@ -1,4 +1,4 @@
-# language-drift (In Progress)
+# language-drift
 
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -7,7 +7,6 @@
 
 This project aims to compare different distributional text representations to determine whether semantic drift occurs and how it impacts the different text representations.
 
-[]: # 'TODO' Give credits to https://github.com/seinan9/LSCDiscovery and other projects that it was based on.
 
 ## Table of Contents
 
@@ -40,7 +39,6 @@ sudo chmod a+w language-drift
 
 # reproduce results
 bash ./reproduce_experiment.sh
-
 
 ```
 
