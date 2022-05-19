@@ -2,13 +2,17 @@
 *.tsv
 # saved models
 mat*
+*.model
 # pickle files
 *.pkl
 # datasets
 *.txt.gz
-
+# numpy files
+*.npy
 # others
 *.iml
 *.xml
+*.json
+model.*
 
 

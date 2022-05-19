@@ -7,9 +7,16 @@ resdir=$3
 data_set_id=$4
 traindir=$5
 top_neighbors=$6
+w2vec_method=$7
 
 if [[ $mapping == "procrustes" ]]
   then
+    if [[ $w2vec_method == "lda2vec" ]]
+      then
+        # Create word2vec format files from wordvectors of pytorch lda2vec
+        python modules/numpy_to_word2vec_format.py data/${data_set_id}/corpus1/lemma_docids.json ${traindir}
+        python modules/numpy_to_word2vec_format.py data/${data_set_id}/corpus2/lemma_docids.json ${traindir}
+    fi
     echo "    Align with orthogonal procrustes method"
     # Length-normalize, meanc-center and align with OP
     python modules/map_embeddings.py --normalize unit center --init_identical --orthogonal ${traindir}/mat1 ${traindir}/mat2 ${outdir}/mat1ca ${outdir}/mat2ca

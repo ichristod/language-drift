@@ -2,6 +2,7 @@
 
 # load all execution parameters
 . executions-configuration/exec.conf
+#. executions-configuration/exec_lda2vec.conf
 
 # TODO
 # Create a kind of dictionary type in configuration file
@@ -102,6 +103,11 @@ if $binary_classification; then
       bash ./scripts/prepare_data.sh ${dataset_id} ./data/${language}_semeval/corpus1/lemma.txt.gz ./data/${language}_semeval/corpus2/lemma.txt.gz ./data/${language}_semeval/corpus1/token.txt.gz ./data/${language}_semeval/corpus2/token.txt.gz ./data/${language}_semeval/targets/targets.tsv ./data/${language}_semeval/truth/binary.tsv ./data/${language}_semeval/truth/graded.tsv
     fi
 
+    # create the appropriate dataset for lda2vec if needed
+    if $prepare_lda2vec ; then
+      python static/prepare_lda2vec_data.py data/${dataset_id}/corpus1/lemma.txt.gz data/${dataset_id}/corpus2/lemma.txt.gz
+    fi
+
     # executions' output folder
     exec_dir=output/${dataset_id}/*/
 
@@ -111,13 +117,17 @@ if $binary_classification; then
       # create embeddings for every different algorithm
       if [[ $action == "train" ]]; then
         for w2vec_method in $w2vec_methods; do
-          echo "w2vec_method: "${w2vec_method}
 
           for mapping in $mappings; do
 
             param_id=${w2vec_method}_win${window_size}_dim${dim}_k${k}_s${s}_mc${min_count1}_mc${min_count2}_i${epochs}_${mapping}
 
-            if $use_pretrained; then
+            if $lda2vec && [ ${w2vec_method} == "lda2vec" ] ; then
+              param_id=${w2vec_method}_topic${n_topics}_dim${dim}_epochs${n_epochs}_${mapping}
+            fi
+
+            # DOES NOT COMBINES PRETRAINED EMBEDDINGS WITH LDA2VEC
+            if $use_pretrained && [ ${w2vec_method} != "lda2vec" ] ; then
               # define pretrained embeddings path
               identify_appropriate_pretrained
 
@@ -154,9 +164,9 @@ if $binary_classification; then
             outdir=output/${dataset_id}/${param_id}/trained_models
 
             # check if training scenario has already been executed
-            if [ ! -d "$outdir" ]; then
+            #if [ ! -d "$outdir" ]; then
 
-              echo \"${param_id_embed}\""  TRAINING SCENARIO STARTED!!"
+              echo \"${param_id}\""  TRAINING SCENARIO STARTED!!"
 
               # create scenario folder
               mkdir -p ${outdir}
@@ -164,14 +174,30 @@ if $binary_classification; then
               # create embeddings of full corpus
               if [[ $mapping == "twec" ]]; then
                 python static/sgns.py data/${dataset_id}/corpus_concat/lemma.txt.gz ${outdir}/corpus_concat ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+
+                : '
+                # execute lda2vec with compass technique
+                if [[ $w2vec_method == "lda2vec" ]]; then
+                  python static/main.py --dataset data/${dataset_id}/corpus_concat/lemma_docids.json
+                fi
+                '
               fi
 
-              # Generate word embeddings with stochastic weights initialization
-              python static/sgns.py data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
-              python static/sgns.py data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
-            else
-              echo \"${param_id}\""  TRAINING HAS ALREADY BEEN EXECUTED!!"
-            fi
+              if [ ${w2vec_method} != "lda2vec" ] ; then
+                # Generate word embeddings with stochastic weights initialization
+                python static/sgns.py data/${dataset_id}/corpus1/lemma.txt.gz ${outdir}/mat1 ${window_size} ${dim} ${k} ${s} ${min_count1} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+                python static/sgns.py data/${dataset_id}/corpus2/lemma.txt.gz ${outdir}/mat2 ${window_size} ${dim} ${k} ${s} ${min_count2} ${epochs} ${mapping} ${w2vec_method} --pretrained None --path_pretrained None
+              fi
+
+              # execute lda2vec for each corpus
+              if [[ $w2vec_method == "lda2vec" ]]; then
+                python static/main.py --n_epochs $n_epochs --dataset data/${dataset_id}/corpus1/lemma_docids.json --path_to_save ${outdir}
+                python static/main.py --n_epochs $n_epochs --dataset data/${dataset_id}/corpus2/lemma_docids.json --path_to_save ${outdir}
+              fi
+
+            #else
+              #echo \"${param_id}\""  TRAINING HAS ALREADY BEEN EXECUTED!!"
+            #fi
           done
         done
       fi
@@ -191,11 +217,9 @@ if $binary_classification; then
             # do for experiments that match the loop variable "mapping"
             if [[ "$param_id" =~ .*"$mapping".* ]]; then
 
-              echo \"${param_id}\""  ALIGNMENT STARTED!!"
-
               # folder of trained models
               traindir=output/${dataset_id}/${param_id}/trained_models
-              echo ""
+
               # output folder of common space models
               outdir=output/${dataset_id}/${param_id}/common_space_models
               # results folder
@@ -203,12 +227,19 @@ if $binary_classification; then
 
               # check if alignment scenario has already been executed
               if [ ! -d "$outdir" ]; then
+
+                echo \"${param_id}\""  ALIGNMENT STARTED!!"
+
                 # create output and results folder
                 mkdir -p ${outdir}
                 mkdir -p ${resdir}
 
                 # actual creation of comparable objects
-                bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors}
+                if [[ $w2vec_methods == "lda2vec" ]] ; then
+                  bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors} ${w2vec_methods}
+                else
+                  bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors} ""
+                fi
               else
                 echo \"${param_id}\""  ALIGNMENT HAS ALREADY BEEN EXECUTED!!"
               fi
@@ -251,8 +282,14 @@ if $binary_classification; then
               retrieve_parameters_from_path ${param_id}
 
               # Calculate classification performance
-              python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
-              python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+              if [[ $w2vec_methods == "lda2vec" ]] ; then
+
+                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_methods} ${pretrained_embed} 10 ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
+                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_methods} ${pretrained_embed} 10 ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+              else
+                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
+                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+              fi
             else
               echo \"${param_id}\""  EVALUATION HAS ALREADY BEEN EXECUTED!!"
             fi
