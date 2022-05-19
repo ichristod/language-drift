@@ -28,5 +28,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Modified
 - classify_sgns.sh (added jaccard index report, classification report)
 
+## [3.0.0] - 2022-04-18
+### Added
+- twec + local neighborhood measure
+### Actions
+- bugfixes
+- refactoring on reproducibility
+
+## [4.0.0] - 2022-05-19
+### Added
+- lda2vec
+- docids concatenation
+- pytorch vectors to w2v format
+### Actions
+- refactoring on reproducibility
+
 
 
