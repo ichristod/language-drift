@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # load all execution parameters
-. executions-configuration/exec.conf
-#. executions-configuration/exec_lda2vec.conf
+#. executions-configuration/exec.conf
+. executions-configuration/exec_lda2vec.conf
 
 # TODO
 # Create a kind of dictionary type in configuration file

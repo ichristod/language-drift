@@ -19,17 +19,17 @@ def preprocess(docs):
         return doc.split()
 
     tokenized_docs = [(i, tokenize(doc)) for i, doc in tqdm(docs[:])]
-    print("tokenized_docs: ",tokenized_docs[:3])
+    #print("tokenized_docs: ",tokenized_docs[:3])
 
     counts = _count_unique_tokens(tokenized_docs)
     encoder, decoder, word_counts = _create_token_encoder(counts)
-    print("encoder: ",list(encoder)[:3])
-    print("decoder: ",list(decoder)[:3])
-    print("word_counts: ",word_counts[:3])
+    #print("encoder: ",list(encoder)[:3])
+    #print("decoder: ",list(decoder)[:3])
+    #print("word_counts: ",word_counts[:3])
 
 
     encoded_docs = _encode(tokenized_docs, encoder)
-    print("encoded_docs: ",encoded_docs[:10])
+    print("encoded_docs: ",encoded_docs[:3])
 
     return encoded_docs, decoder, word_counts
 

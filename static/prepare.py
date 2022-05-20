@@ -18,13 +18,16 @@ def get_train_data(encoded_docs):
         # where word is in the document
         data += [[index, w[0]] + w[1] for w in windows]
     data = np.array(data, dtype='int32')
+    #print("get_train_data(encoded_docs): ",data[:3])
     return data
 
 
 def prepare(dataset,path_to_save,dataset_filename):
     with open(dataset, 'r') as fp:
         texts = json.load(fp)
+        print("texts[:2]: ",texts[:2])
 
+    #print("dataset: ", dataset)
     encoded_docs, decoder, word_counts = pp.preprocess(texts)
     word_counts = np.array(word_counts)
     unigram_distribution = word_counts / sum(word_counts)

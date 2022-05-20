@@ -46,10 +46,15 @@ def train_word2vec_model(pretrained_matrix, embeddings_to_load, apply_incrementa
     elif (pretrained_matrix in list_of_pretrained) or apply_incremental or apply_twec:
         # check if exists pretrained embedding with given dimensions
         if dim in pretrained_dim:
+            encoding ='utf-8'
+            # change encoding to fix " 'utf-8' codec can't decode byte 0xc3 in position 97: invalid continuation byte" error
+            if pretrained_matrix == 'sweconll17':
+                encoding = 'latin-1'
+
             # initialize embeddings
-            model_wv = KeyedVectors.load_word2vec_format(embeddings_to_load, binary=False)
+            model_wv = KeyedVectors.load_word2vec_format(embeddings_to_load, encoding=encoding,binary=False)
             word2vec_model.build_vocab([list(model_wv.vocab.keys())], update=True)
-            word2vec_model.intersect_word2vec_format(embeddings_to_load, binary=False, lockf=1.0)
+            word2vec_model.intersect_word2vec_format(embeddings_to_load, encoding=encoding,binary=False, lockf=1.0)
             word2vec_model.train(sentences, total_examples=total_examples, epochs=word2vec_model.epochs)
 
     return word2vec_model

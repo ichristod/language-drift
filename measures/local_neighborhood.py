@@ -42,6 +42,8 @@ def main():
     start_time = time.time()
 
     # load embeddings matrices
+    #model_src = KeyedVectors.load_word2vec_format(path_src_embeddings, encoding='latin-1',binary=False)
+    #model_trg = KeyedVectors.load_word2vec_format(path_trg_embeddings, encoding='latin-1',binary=False)
     model_src = KeyedVectors.load_word2vec_format(path_src_embeddings, binary=False)
     model_trg = KeyedVectors.load_word2vec_format(path_trg_embeddings, binary=False)
 

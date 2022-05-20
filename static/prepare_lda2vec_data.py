@@ -32,11 +32,17 @@ def main():
             for sentence in corpus_docids:
                 docs.append(sentence.split("\n")[0])
 
+            # remove one letter words
+            for idx, element in enumerate(docs):
+                docs[idx]  = " ".join([value for value in str(element).split(" ") if len(value) > 2])
+
             # ["sentence_1","sentence_2"] -> [["sentence_1"],["sentence_2"]]
             list_results = [[element] for element in docs if len(str(element).split(" ")) > 11]
-            #list_results = list_results[:int(len(list_results) / 30)]
+            #list_results = list_results[:int(len(list_results) / 1000)]
 
             print("Number of sentences in ",path," is: ",len(list_results))
+            #print("list_results ",list_results[:2])
+
             for counter,value in enumerate(list_results):
                 # [["sentence_1"],["sentence_2"]] -> [[idx_1,"sentence_1"],[idx_2,"sentence_2"]]
                 list_results[counter].insert(0,counter)
