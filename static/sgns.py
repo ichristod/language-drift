@@ -13,7 +13,7 @@ import sys
 # Acceptable pretrained embeddings dimensions
 pretrained_dim = [50, 100, 200, 300]
 # Acceptable pretrained embeddings
-list_of_pretrained = ['glove', 'dewiki', 'latconll17', 'sweconll17','spaconll17']
+list_of_pretrained = ['glove', 'dewiki', 'latconll17', 'sweconll17']
 
 
 def initialize_word2vec_model(path_corpus, algorithm, hs, neg_samples, sampl_threshold, dim,

@@ -57,9 +57,15 @@ def main():
     with open(path_targets, 'r', encoding='utf-8') as f:
         reader = csv.reader(f, delimiter='\t', quoting=csv.QUOTE_NONE, strict=True)
         for row in reader:
+            top_src_similar =[]
+            top_trg_similar =[]
+
             try:
-                top_src_similar = list(set([i[0] for i in model_src.most_similar(positive=[row[0]],topn=top_neighbors)]))
-                top_trg_similar = list(set([i[0] for i in model_trg.most_similar(positive=[row[0]],topn=top_neighbors)]))
+                if row[0] in model_src.vocab:
+                    top_src_similar = list(set([i[0] for i in model_src.most_similar(positive=[row[0]],topn=top_neighbors)]))
+
+                if row[0] in model_trg.vocab:
+                    top_trg_similar = list(set([i[0] for i in model_trg.most_similar(positive=[row[0]],topn=top_neighbors)]))
 
                 all_words = set(top_src_similar + top_trg_similar)
 
@@ -78,7 +84,10 @@ def main():
                     else:
                         vec_2.append(1 - cosine_distance(model_trg[row[0]], avg_trg))
 
-                distances[row[0]] = 1 - cosine_distance(vec_1, vec_2)
+                if vec_1 and vec_2:
+                    distances[row[0]] = cosine_distance(vec_1, vec_2)
+                else:
+                    distances[row[0]] = 1
 
                 # Write output to <path_output>
                 with open(path_output, 'w', encoding='utf-8') as f:
