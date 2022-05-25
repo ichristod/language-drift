@@ -51,12 +51,13 @@ def main():
 
     # Compute mean, std and threshold
     list_distances = np.array(list(distances.values()))
-    upper_quantile = np.quantile(list_distances, thres_percentage)
+    upper_quantile = np.quantile(list_distances, 0.75)
     list_distances = list_distances[list_distances < upper_quantile]
 
     mean = np.mean(list_distances, axis=0)
+    #std = np.std(list_distances, axis=0)
     stde = sem(list_distances, axis=0)
-    threshold = mean + stde
+    threshold = mean + thres_percentage*stde
 
     # Usage 1: discover changing words 
     if path_targets == None:
