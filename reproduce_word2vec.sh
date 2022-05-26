@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # load all execution parameters
-#. executions-configuration/exec.conf
-. executions-configuration/exec_lda2vec.conf
+. executions-configuration/exec.conf
+#. executions-configuration/exec_lda2vec.conf
 
 # TODO
 # Create a kind of dictionary type in configuration file
@@ -163,8 +163,8 @@ if $binary_classification; then
             # output folder of models with stochastic weights initialization
             outdir=output/${dataset_id}/${param_id}/trained_models
 
-            # check if training scenario has already been executed
-            #if [ ! -d "$outdir" ]; then
+            # check if training scenario has already been executed (comment on lda2vec)
+            if [ ! -d "$outdir" ]; then
 
               echo \"${param_id}\""  TRAINING SCENARIO STARTED!!"
 
@@ -195,9 +195,9 @@ if $binary_classification; then
                 python static/main.py --n_epochs $n_epochs --dataset data/${dataset_id}/corpus2/lemma_docids.json --path_to_save ${outdir}
               fi
 
-            #else
-              #echo \"${param_id}\""  TRAINING HAS ALREADY BEEN EXECUTED!!"
-            #fi
+            else
+              echo \"${param_id}\""  TRAINING HAS ALREADY BEEN EXECUTED!!"
+            fi
           done
         done
       fi
@@ -267,31 +267,39 @@ if $binary_classification; then
 
             # results folder
             outdir=output/${dataset_id}/${param_id}/results/t${thres_percentage}
-            if [ ! -d "$outdir" ]; then
+            echo "outdir: "${outdir}
 
-              echo \"${param_id_embed}\""  EVALUATION STARTED!!"
+            SUB='lda2vec'
+            if [[ "$outdir" != *"$SUB"* ]]; then
+              echo $outdir
 
-              mkdir -p ${outdir}
 
-              echo "param_id: "${param_id}", distdir: "${distdir}", outdir: "${outdir}
-              # Compute binary scores for cosine distance measure
-              python measures/binary.py ${distdir}/distances_intersection.tsv ${distdir}/distances_targets.tsv ${outdir}/scores_targets_cd.tsv " ${thres_percentage} "
-              # Compute binary scores for local neighborhood distance measure
-              python measures/binary.py ${distdir}/local_neighborhood_distances.tsv ${distdir}/local_neighborhood_distances.tsv ${outdir}/scores_targets_ln.tsv " ${thres_percentage} "
+              if [ ! -d "$outdir" ]; then
 
-              retrieve_parameters_from_path ${param_id}
+                echo \"${param_id_embed}\""  EVALUATION STARTED!!"
 
-              # Calculate classification performance
-              if [[ $w2vec_methods == "lda2vec" ]] ; then
+                mkdir -p ${outdir}
 
-                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_methods} ${pretrained_embed} 10 ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
-                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_methods} ${pretrained_embed} 10 ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+                echo "param_id: "${param_id}", distdir: "${distdir}", outdir: "${outdir}
+                # Compute binary scores for cosine distance measure
+                python measures/binary.py ${distdir}/distances_intersection.tsv ${distdir}/distances_targets.tsv ${outdir}/scores_targets_cd.tsv " ${thres_percentage} "
+                # Compute binary scores for local neighborhood distance measure
+                python measures/binary.py ${distdir}/local_neighborhood_distances.tsv ${distdir}/local_neighborhood_distances.tsv ${outdir}/scores_targets_ln.tsv " ${thres_percentage} "
+
+                retrieve_parameters_from_path ${param_id}
+
+                # Calculate classification performance
+                if [[ $w2vec_methods == "lda2vec" ]] ; then
+
+                  python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_methods} ${pretrained_embed} 10 ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
+                  python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_methods} ${pretrained_embed} 10 ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+                else
+                  python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
+                  python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+                fi
               else
-                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_cd.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "cosine_distance"
-                python evaluation/class_metrics.py data/${dataset_id}/truth/binary.tsv ${outdir}/scores_targets_ln.tsv ${outdir}/pickled_classification_res.pkl ${mapping} ${w2vec_method} ${pretrained_embed} ${window_size} ${dim} ${thres_percentage} ${dataset_id} ${language} "local_neighborhood_distance"
+                echo \"${param_id}\""  EVALUATION HAS ALREADY BEEN EXECUTED!!"
               fi
-            else
-              echo \"${param_id}\""  EVALUATION HAS ALREADY BEEN EXECUTED!!"
             fi
           done
         done
