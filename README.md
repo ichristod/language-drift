@@ -53,8 +53,8 @@ In order to identify whether a word lost, gained or kept it's initial sense we u
 Given a common vocabulary Vcommon for two different time periods t and t+1, we indicate a semantic shift of a word when its cosise distance is bigger than a threshold distance. This threshold distance has been calculated as follows:
 
 ```
-$$ dist-list= cos-dist(w_t, w_t_+_1) \forall w \in V_c_o_m_m_o_n $$
-$$ dist-threshold = mean(dist-list) + stde(dist-list) $$
+dist_list= cos_dist(w{t}, w(t+1)) ∀ w ∈ Vcommon
+dist_threshold = mean(dist_list) + stde(dist_list)
 ```
 
 ### - reproduce_experiment script
