@@ -49,8 +49,12 @@ These words are annotated and provided from the [SemEval-2020 Task 1: Unsupervis
 
 In order to identify whether a word lost, gained or kept it's initial sense we use the following threshold on the cosine distance of each word (W) in corpora C1 from the same word in corpora C2.
 
+### Binary Classification Rule
+Given a common vocabulary Vcommon for two different time periods t and t+1, we indicate a semantic shift of a word when its cosise distance is bigger than a threshold distance. This threshold distance has been calculated as follows:
+
 ```
-Distance(Wc1,Wc2) > threshold = mean(list_of_distances_of_target_words) + standardError(list_of_distances_of_target_words)
+$$ dist-list= cos-dist(w_t, w_t_+_1) \forall w \in V_c_o_m_m_o_n $$
+$$ dist-threshold = mean(dist-list) + stde(dist-list) $$
 ```
 
 ### - reproduce_experiment script
