@@ -112,6 +112,7 @@ Results are presented in the following table and can also be found in **language
             The number of samples were
 
     .. image:: /visualizations/images/opsamples.png
+    ..
 
             **F1 Scores per representation model**
 
@@ -122,6 +123,7 @@ Results are presented in the following table and can also be found in **language
             The number of samples were
 
     .. image:: /visualizations/images/pretrainedsamples.png
+    ..
 
             **F1 Scores per representation model**
 
@@ -132,6 +134,7 @@ Results are presented in the following table and can also be found in **language
             The number of samples were
 
     .. image:: /visualizations/images/lda2vecsaples.png
+    ..
 
             **F1 Scores per representation model**
 
