@@ -19,7 +19,7 @@ use alignment methods, or use a different approach that learns representations i
 The implemented decoupled pipeline is described by the following diagram.
 
 .. image:: /visualizations/images/pipeline.png
-   :width: 400pt
+
 
 Reference
 ---------
@@ -92,7 +92,7 @@ There are also available some functionalities for the first execution:
 * prepare_datasets folder structure --> true/false
 
 
-**Word2vec parameters are described in **classify_sgns.sh**.
+**Word2vec** parameters are described in **classify_sgns.sh**.
 
 An example of that script is presented below.
 
@@ -106,46 +106,42 @@ Results
 Results are presented in the following table and can also be found in **language_drift_results.csv** file.
 
     .. image:: /visualizations/images/results.png
-    :width: 400pt
 
 + **Which vectors’ alignment method performs better?**
-    The number of samples were
+
+            The number of samples were
 
     .. image:: /visualizations/images/opsamples.png
-    :width: 400pt
 
-    F1 Scores per representation model
+            **F1 Scores per representation model**
 
     .. image:: /visualizations/images/experiment1.png
-    :width: 400pt
 
 + **Do pre-trained embeddings improve performance?**
-    The number of samples were
+
+            The number of samples were
 
     .. image:: /visualizations/images/pretrainedsamples.png
-    :width: 400pt
 
-    F1 Scores per representation model
+            **F1 Scores per representation model**
 
     .. image:: /visualizations/images/experiment2.png
-    :width: 400pt
 
 + **Do the representations of LDA2vec and Word2vec perform the same**
-    The number of samples were
+
+            The number of samples were
 
     .. image:: /visualizations/images/lda2vecsaples.png
-    :width: 400pt
 
-    F1 Scores per representation model
+            **F1 Scores per representation model**
 
     .. image:: /visualizations/images/experiment3.png
-    :width: 400pt
 
 + **LDA2vec and Local Neighborhood Measure?**
-    F1 Scores per similarity measure
+
+            **F1 Scores per similarity measure**
 
     .. image:: /visualizations/images/experiment4.png
-    :width: 400pt
 
 
 
