@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # load all execution parameters
-. executions-configuration/exec.conf
-#. executions-configuration/exec_lda2vec.conf
+#. executions-configuration/exec.conf
+. executions-configuration/exec_lda2vec.conf
 
 # TODO
 # Create a kind of dictionary type in configuration file
@@ -236,9 +236,9 @@ if $binary_classification; then
 
                 # actual creation of comparable objects
                 if [[ $w2vec_methods == "lda2vec" ]] ; then
-                  bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors} ${w2vec_methods}
+                  bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors} ${w2vec_methods} ${language}
                 else
-                  bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors} ""
+                  bash ./scripts/align_embeddings.sh ${mapping} ${outdir} ${resdir} ${dataset_id} ${traindir} ${top_neighbors} "" ${language}
                 fi
               else
                 echo \"${param_id}\""  ALIGNMENT HAS ALREADY BEEN EXECUTED!!"
@@ -270,7 +270,7 @@ if $binary_classification; then
             echo "outdir: "${outdir}
 
             SUB='lda2vec'
-            if [[ "$outdir" != *"$SUB"* ]]; then
+            if [[ "$outdir" == *"$SUB"* ]]; then
               echo $outdir
 
 
