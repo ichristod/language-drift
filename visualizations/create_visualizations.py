@@ -4,24 +4,24 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 language = 'en'
-embed='glove'
+embed='None'
 plot=True
 
 
 df = pd.DataFrame()
 
 if plot:
-    path = './output/en_4.0.0/**/results'
+    path = './output/**/**/results'
     text_files = set(glob.glob(path + "/**/*.pkl", recursive=True))
     for file in text_files:
         df = pd.concat([df, pd.read_pickle(file)], ignore_index=True, axis=0)
 
-    df.to_csv('language_drift_results_4.0.0', index=False)
+    #df.to_csv('language_drift_results_4.0.1', index=False)
 
     sns.set()
-    pre = sns.relplot(x='w2vec_algorithm', y='f1_cd', hue='mapping',
+    pre = sns.relplot(x='w2vec_algorithm', y='f1_ln', hue='mapping',
                       col="pretrained", col_order=['None',embed],
-                      hue_order=['procrustes','incremental','twec'], palette='BuGn', s=500,
+                      hue_order=['procrustes'], palette='BuGn', s=500,
                       data=df.loc[(df['language'] == language)])
     plt.xlabel('', size=14, family='monospace')
     plt.ylabel('F1-Score', size=14, family='monospace')
@@ -34,7 +34,7 @@ if plot:
 
 
     sns.set()
-    sns.boxplot(x='mapping', y='f1_cd', saturation=1, palette='BuGn', data=df.loc[ (df['language'] == language)])
+    sns.boxplot(x='mapping', y='f1_ln', saturation=1, palette='BuGn', data=df.loc[ (df['language'] == language)])
     # specify axis labels
     plt.xlabel('', size=14, family='monospace')
     plt.ylabel('F1-Score', size=14, family='monospace')
@@ -42,7 +42,7 @@ if plot:
     plt.show()
 
     sns.set()
-    pree = sns.catplot(x='t', y='f1_cd', hue='pretrained', order=['1.0'], col="mapping",
+    pree = sns.catplot(x='t', y='f1_ln', hue='pretrained', order=['1.0'], col="mapping",
                        hue_order=['None', embed],
                        col_order=['procrustes','twec','incremental'],
                        palette='BuGn', kind="box", saturation=1, data=df.loc[(df['language'] == language)])
@@ -53,12 +53,12 @@ if plot:
     plt.show()
 
     sns.set()
-    sns.catplot(x='window_size', y='f1_cd', hue='w2vec_algorithm', palette='BuGn',
+    sns.catplot(x='window_size', y='f1_ln', hue='w2vec_algorithm', palette='BuGn',
                 col="mapping", col_order=['procrustes','twec','incremental'], kind="box", saturation=1, data=df.loc[(df['language'] == language)])
     plt.show()
 
     sns.set()
-    sns.catplot(x='window_size', y='f1_cd', hue='pretrained', col="mapping", col_order=['procrustes','twec','incremental'],
+    sns.catplot(x='window_size', y='f1_ln', hue='pretrained', col="mapping", col_order=['procrustes','twec','incremental'],
                 palette='BuGn', kind="box", saturation=1, data=df.loc[(df['language'] == language)])
     plt.show()
 else:

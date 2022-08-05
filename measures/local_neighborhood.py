@@ -26,6 +26,7 @@ def main():
         <path_targets>           = path to target words file
         <top_neighbors>          = number of top similar neighbor words
         <path_output>            = output path for result file
+        <language>               = language
 
     """)
 
@@ -36,16 +37,22 @@ def main():
     path_targets = args['<path_targets>']
     top_neighbors = int(args['<top_neighbors>'])
     path_output = args['<path_output>']
+    language = args['<language>']
 
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     logging.info(__file__.upper())
     start_time = time.time()
 
+    special_encoding = ['swe','de']
     # load embeddings matrices
-    #model_src = KeyedVectors.load_word2vec_format(path_src_embeddings, encoding='latin-1',binary=False)
-    #model_trg = KeyedVectors.load_word2vec_format(path_trg_embeddings, encoding='latin-1',binary=False)
-    model_src = KeyedVectors.load_word2vec_format(path_src_embeddings, binary=False)
-    model_trg = KeyedVectors.load_word2vec_format(path_trg_embeddings, binary=False)
+    # "latin-1" in cases of encoding errors
+    # "latin-1" is required for Swedish and
+    if language in special_encoding:
+        model_src = KeyedVectors.load_word2vec_format(path_src_embeddings, encoding='latin-1',binary=False)
+        model_trg = KeyedVectors.load_word2vec_format(path_trg_embeddings, encoding='latin-1',binary=False)
+    else:
+        model_src = KeyedVectors.load_word2vec_format(path_src_embeddings, binary=False)
+        model_trg = KeyedVectors.load_word2vec_format(path_trg_embeddings, binary=False)
 
     # calculate averages for each document
     avg_src = np.average(model_src[model_src.vocab], axis=0)

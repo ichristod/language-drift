@@ -8,6 +8,7 @@ data_set_id=$4
 traindir=$5
 top_neighbors=$6
 w2vec_method=$7
+language=$8
 
 if [[ $mapping == "procrustes" ]]
   then
@@ -25,7 +26,7 @@ if [[ $mapping == "procrustes" ]]
     # Measure CD for every target word
     python measures/cd.py ${outdir}/mat1ca ${outdir}/mat2ca data/${data_set_id}/targets/targets.tsv ${resdir}/distances_targets.tsv
     # Calculate local neighborhood measure for target words
-    python measures/local_neighborhood.py ${traindir}/mat1 ${traindir}/mat2 data/${data_set_id}/targets/targets.tsv ${top_neighbors} ${resdir}/local_neighborhood_distances.tsv
+    python measures/local_neighborhood.py ${traindir}/mat1 ${traindir}/mat2 data/${data_set_id}/targets/targets.tsv ${top_neighbors} ${resdir}/local_neighborhood_distances.tsv ${language}
 
 elif [[ "$mapping" == "incremental"  || "$mapping" == "twec" ]]
   then
